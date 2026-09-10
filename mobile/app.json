@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "ORTA",
+    "slug": "orta",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "kz.orta.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "ORTA использует галерею, чтобы прикреплять фото к материалам и заметкам пар.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.kz.orta.app"
+        ]
+      },
+      "appleTeamId": "8DK963QWDZ"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#5324B0"
+      },
+      "package": "kz.orta.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/orta-glyphs.png",
+          "imageWidth": 150,
+          "backgroundColor": "#5324B0"
+        }
+      ],
+      [
+        "expo-notifications",
+        {}
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ORTA использует камеру, чтобы отсканировать QR-код группы старосты.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "@bacons/apple-targets"
+    ],
+    "scheme": "orta",
+    "extra": {
+      "eas": {
+        "projectId": "8218da0e-78c3-41ce-88e0-986b3d891836"
+      }
+    },
+    "owner": "osc777"
+  }
+}

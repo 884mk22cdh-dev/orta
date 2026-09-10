@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORTA Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg:#15161C; --card:#20222B; --card2:#262837; --ink:#F2F3F7; --muted:#8F93A3;
+    --border:#2C2E39; --accent:#6C4FE0; --accent-br:#8B6FF5; --red:#F4564E; --green:#3DB96B;
+    --teal:#4AB8A5; --yellow:#F2B23E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:400 14px/1.5 'Inter',sans-serif;min-height:100vh}
+  h1,h2,h3{font-family:'Manrope',sans-serif}
+  button{font-family:inherit;border:0;cursor:pointer;background:none;color:inherit}
+  input,select{font-family:inherit}
+
+  .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:var(--card);border-radius:24px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .logo{font:800 26px 'Manrope';letter-spacing:6px;color:var(--accent-br)}
+  .field{margin-top:14px}
+  .field label{display:block;font:600 12px 'Inter';color:var(--muted);margin-bottom:6px}
+  .field input,.field select{width:100%;height:46px;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:0 14px;color:var(--ink);font-size:14px;outline:none}
+  .field input:focus{border-color:var(--accent)}
+  .btn{width:100%;height:48px;background:var(--accent);border-radius:14px;font:700 15px 'Manrope';color:#fff;margin-top:18px;transition:opacity .15s}
+  .btn:hover{opacity:.9}
+  .btn.ghost{background:var(--card2);color:var(--muted);font-weight:600}
+  .hint{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+  .err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+
+  .shell{display:none;grid-template-columns:230px 1fr;min-height:100vh}
+  .side{background:var(--card);border-right:1px solid var(--border);padding:24px 14px;display:flex;flex-direction:column;gap:4px}
+  .side .logo{padding:0 12px 20px}
+  .nav{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;font:600 14px 'Inter';color:var(--muted);width:100%;text-align:left}
+  .nav.active{background:var(--accent);color:#fff}
+  .nav:not(.active):hover{background:var(--card2)}
+  .side .out{margin-top:auto;color:var(--red)}
+  .main{padding:28px 32px;max-width:1200px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .topbar h1{font-size:24px;font-weight:800}
+  .refresh{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:9px 18px;font:600 13px 'Inter';color:var(--muted)}
+  .refresh:hover{color:var(--ink)}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .tile{background:var(--card);border-radius:20px;padding:18px}
+  .tile .v{font:800 30px 'Manrope';font-variant-numeric:tabular-nums}
+  .tile .k{font:500 12px 'Inter';color:var(--muted);margin-top:4px}
+  .tile .dot{width:8px;height:8px;border-radius:99px;display:inline-block;margin-right:7px}
+
+  .panel{background:var(--card);border-radius:20px;padding:20px;margin-top:16px}
+  .panel h3{font-size:15px;font-weight:700;margin-bottom:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}.shell{grid-template-columns:64px 1fr}.nav span,.side .logo{display:none}}
+
+  table{width:100%;border-collapse:collapse}
+  th{font:600 11px 'Inter';color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
+  td{padding:10px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.num{font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;background:var(--card2);border-radius:999px;padding:3px 10px;font:600 11px 'Inter';color:var(--muted)}
+  .tag.pub{background:rgba(139,111,245,.16);color:var(--accent-br)}
+  .del{color:var(--red);font:600 12px 'Inter'}
+
+  .bar-row{display:grid;grid-template-columns:180px 1fr 44px;gap:10px;align-items:center;padding:6px 0}
+  .bar-row .name{font:500 13px 'Inter';color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-track{height:14px;background:var(--card2);border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--accent-br);border-radius:0 4px 4px 0;min-width:2px}
+  .bar-row .n{font:600 13px 'Inter';color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+
+  .swatches{display:flex;gap:10px;margin-top:6px}
+  .sw{width:34px;height:34px;border-radius:99px;border:3px solid transparent}
+  .sw.sel{border-color:#fff;outline:2px solid var(--accent)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#000;color:#fff;border-radius:999px;padding:10px 20px;font:500 13px 'Inter';opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .toast.show{opacity:1}
+  .muted{color:var(--muted)}
+  .search{max-width:320px;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<!-- Вход -->
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="logo">ORTA</div>
+    <h2 style="margin-top:14px;font-size:20px">Админ-панель</h2>
+    <div class="field"><label>Email</label><input id="l-email" type="email" autocomplete="username"></div>
+    <div class="field"><label>Пароль</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+    <button class="btn" onclick="signIn()">Войти</button>
+    <button class="btn ghost" onclick="signUp()">Зарегистрироваться</button>
+    <div class="err" id="l-err"></div>
+    <div class="hint">Первый раз: зарегистрируйтесь, затем выполните backend/admin.sql в SQL Editor — он выдаст права администратора.</div>
+  </div>
+</div>
+
+<!-- Панель -->
+<div class="shell" id="shell">
+  <aside class="side">
+    <div class="logo">ORTA</div>
+    <button class="nav active" data-p="dash" onclick="go('dash')">📊 <span>Дашборд</span></button>
+    <button class="nav" data-p="events" onclick="go('events')">🎟️ <span>Афиша</span></button>
+    <button class="nav" data-p="students" onclick="go('students')">🎓 <span>Студенты</span></button>
+    <button class="nav" data-p="groups" onclick="go('groups')">👥 <span>Группы</span></button>
+    <button class="nav" data-p="forum" onclick="go('forum')">💬 <span>Форум</span></button>
+    <button class="nav out" onclick="signOut()">⏻ <span>Выйти</span></button>
+  </aside>
+  <main class="main">
+    <div class="topbar"><h1 id="title">Дашборд</h1><button class="refresh" onclick="loadAll()">↻ Обновить</button></div>
+
+    <div id="p-dash">
+      <div class="tiles">
+        <div class="tile"><div class="v" id="t-users">—</div><div class="k"><span class="dot" style="background:var(--accent-br)"></span>Студентов</div></div>
+        <div class="tile"><div class="v" id="t-groups">—</div><div class="k"><span class="dot" style="background:var(--teal)"></span>Групп</div></div>
+        <div class="tile"><div class="v" id="t-posts">—</div><div class="k"><span class="dot" style="background:var(--yellow)"></span>Постов в форумах</div></div>
+        <div class="tile"><div class="v" id="t-events">—</div><div class="k"><span class="dot" style="background:var(--green)"></span>Событий в афише</div></div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h3>Топ университетов</h3><div id="uni-bars" class="muted">Загрузка…</div></div>
+        <div class="panel"><h3>Последние студенты</h3><div id="recent"></div></div>
+      </div>
+    </div>
+
+    <div id="p-events" style="display:none">
+      <div class="panel">
+        <h3>Опубликовать афишу / рекламу — увидят все пользователи</h3>
+        <div class="form-grid">
+          <div class="field"><label>Название</label><input id="e-title" placeholder="День открытых дверей"></div>
+          <div class="field"><label>Дата и время</label><input id="e-date" placeholder="10 сентября, 15:00"></div>
+          <div class="field"><label>Место</label><input id="e-place" placeholder="Актовый зал"></div>
+          <div class="field"><label>Иконка</label>
+            <select id="e-icon">
+              <option value="ticket">🎟️ Билет</option><option value="megaphone">📣 Рупор</option>
+              <option value="music">🎵 Музыка</option><option value="code">💻 IT</option>
+              <option value="graduation-cap">🎓 Учёба</option><option value="dumbbell">🏋️ Спорт</option>
+              <option value="palette">🎨 Искусство</option><option value="briefcase">💼 Карьера</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Цвет карточки</label>
+          <div class="swatches" id="e-colors"></div>
+        </div>
+        <button class="btn" style="max-width:280px" onclick="publishEvent()">Опубликовать для всех</button>
+      </div>
+      <div class="panel"><h3>Все события</h3><div id="events-list"></div></div>
+    </div>
+
+    <div id="p-students" style="display:none">
+      <div class="panel">
+        <input class="field-input search" id="s-search" placeholder="Поиск по имени, вузу, группе…" oninput="renderStudents()"
+               style="width:100%;max-width:340px;height:42px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:0 14px;color:var(--ink);outline:none;margin-bottom:14px">
+        <div id="students-list"></div>
+      </div>
+    </div>
+
+    <div id="p-groups" style="display:none"><div class="panel"><div id="groups-list"></div></div></div>
+    <div id="p-forum" style="display:none"><div class="panel"><div id="forum-list"></div></div></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB = supabase.createClient(
+  'https://zqjbvrfpuusemdsurskc.supabase.co',
+  'sb_publishable_cNklJgCZPeWFHLkvqWUF2Q_4_N92CRI'
+);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COLORS = ['#6C4FE0','#F4564E','#F2B23E','#3DB96B','#3E9BF0','#22B8A6'];
+let eventColor = COLORS[0];
+let profiles = [], toastT = null;
+
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
+const TITLES = { dash:'Дашборд', events:'Афиша и реклама', students:'Студенты', groups:'Группы', forum:'Форум (модерация)' };
+function go(p){
+  document.querySelectorAll('.nav[data-p]').forEach(n=>n.classList.toggle('active', n.dataset.p===p));
+  ['dash','events','students','groups','forum'].forEach(x=>$('#p-'+x).style.display = x===p?'':'none');
+  $('#title').textContent = TITLES[p];
+}
+
+/* ---------- Auth ---------- */
+async function signIn(){
+  $('#l-err').textContent='';
+  const { error } = await SB.auth.signInWithPassword({ email: $('#l-email').value.trim(), password: $('#l-pass').value });
+  if (error) { $('#l-err').textContent = error.message; return; }
+  boot();
+}
+async function signUp(){
+  $('#l-err').textContent='';
+  const { error } = await SB.auth.signUp({ email: $('#l-email').value.trim(), password: $('#l-pass').value });
+  if (error) { $('#l-err').textContent = error.message; return; }
+  $('#l-err').textContent = 'Аккаунт создан. Теперь выполните admin.sql в SQL Editor и нажмите «Войти».';
+}
+async function signOut(){ await SB.auth.signOut(); location.reload(); }
+
+async function boot(){
+  const { data: { session } } = await SB.auth.getSession();
+  if (!session) return;
+  const { data: isAdmin } = await SB.rpc('is_admin');
+  if (!isAdmin) { $('#l-err').textContent = 'Этот аккаунт не админ. Выполните backend/admin.sql в SQL Editor.'; return; }
+  $('#login').style.display='none';
+  $('#shell').style.display='grid';
+  loadAll();
+}
+
+/* ---------- Данные ---------- */
+async function count(tbl){
+  const { count: c } = await SB.from(tbl).select('*', { count: 'exact', head: true });
+  return c ?? 0;
+}
+async function loadAll(){
+  const [u,g,p,e] = await Promise.all([count('profiles'), count('groups'), count('forum_posts'), count('events')]);
+  $('#t-users').textContent=u; $('#t-groups').textContent=g; $('#t-posts').textContent=p; $('#t-events').textContent=e;
+  const { data: profs } = await SB.from('profiles').select('*').order('updated_at',{ascending:false}).limit(1000);
+  profiles = profs || [];
+  renderUniBars(); renderRecent(); renderStudents();
+  loadEvents(); loadGroups(); loadForum();
+}
+function renderUniBars(){
+  const by = {};
+  profiles.forEach(p => { const u = p.university || '—'; by[u] = (by[u]||0)+1; });
+  const top = Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max = top[0]?.[1] || 1;
+  $('#uni-bars').innerHTML = top.length ? top.map(([u,n]) => `
+    <div class="bar-row"><div class="name" title="${esc(u)}">${esc(u)}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
+    <div class="n">${n}</div></div>`).join('') : '<span class="muted">Пока нет данных</span>';
+}
+function renderRecent(){
+  $('#recent').innerHTML = `<table><tr><th>Студент</th><th>Вуз</th><th>Группа</th></tr>` +
+    profiles.slice(0,10).map(p=>`<tr><td>${esc(p.first_name)} ${esc(p.last_name)}</td><td>${esc(p.university)}</td><td>${esc(p.group_name||'—')}</td></tr>`).join('') + '</table>';
+}
+function renderStudents(){
+  const q = ($('#s-search').value||'').toLowerCase();
+  const list = profiles.filter(p => !q || `${p.first_name} ${p.last_name} ${p.university} ${p.group_name} ${p.faculty}`.toLowerCase().includes(q));
+  $('#students-list').innerHTML = `<table><tr><th>Имя</th><th>Вуз</th><th>Факультет</th><th>Курс</th><th>Группа</th><th>Телефон</th></tr>` +
+    list.slice(0,200).map(p=>`<tr><td>${esc(p.first_name)} ${esc(p.last_name)}</td><td>${esc(p.university)}</td><td>${esc(p.faculty)}</td><td class="num">${p.course}</td><td>${esc(p.group_name||'—')}</td><td class="num">${esc(p.phone||'—')}</td></tr>`).join('') +
+    `</table><div class="muted" style="margin-top:10px">${list.length} из ${profiles.length}</div>`;
+}
+async function loadEvents(){
+  const { data } = await SB.from('events').select('*').order('created_at',{ascending:false}).limit(100);
+  $('#events-list').innerHTML = `<table><tr><th>Название</th><th>Дата</th><th>Место</th><th>Тип</th><th></th></tr>` +
+    (data||[]).map(e=>`<tr>
+      <td><span class="dot" style="background:${esc(e.color)};display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:8px"></span>${esc(e.title)}</td>
+      <td>${esc(e.date_text)}</td><td>${esc(e.place)}</td>
+      <td>${e.user_id ? '<span class="tag">личная</span>' : '<span class="tag pub">для всех</span>'}</td>
+      <td>${e.user_id ? '' : `<button class="del" onclick="delEvent('${e.id}')">Удалить</button>`}</td></tr>`).join('') + '</table>';
+}
+async function publishEvent(){
+  const title = $('#e-title').value.trim();
+  if (!title) { toast('Введите название'); return; }
+  const { error } = await SB.from('events').insert({
+    user_id: null, title,
+    date_text: $('#e-date').value.trim() || 'Дата уточняется',
+    place: $('#e-place').value.trim() || 'Место уточняется',
+    color: eventColor, icon: $('#e-icon').value,
+  });
+  if (error) { toast('Ошибка: ' + error.message); return; }
+  $('#e-title').value=''; $('#e-date').value=''; $('#e-place').value='';
+  toast('Опубликовано! Появится у всех в приложении 🎉');
+  loadEvents();
+}
+async function delEvent(id){
+  await SB.from('events').delete().eq('id', id);
+  toast('Удалено'); loadEvents();
+}
+async function loadGroups(){
+  const [{ data: gs }, { data: members }] = await Promise.all([
+    SB.from('groups').select('*').order('created_at',{ascending:false}).limit(200),
+    SB.from('group_members').select('group_id'),
+  ]);
+  const cnt = {};
+  (members||[]).forEach(m => cnt[m.group_id]=(cnt[m.group_id]||0)+1);
+  $('#groups-list').innerHTML = `<table><tr><th>Группа</th><th>Вуз</th><th>Код</th><th>Участников</th><th>Создана</th></tr>` +
+    (gs||[]).map(g=>`<tr><td>${esc(g.name)}</td><td>${esc(g.university)}</td><td class="num">${esc(g.code)}</td><td class="num">${cnt[g.id]||0}</td><td class="num">${new Date(g.created_at).toLocaleDateString('ru-RU')}</td></tr>`).join('') + '</table>';
+}
+async function loadForum(){
+  const { data } = await SB.from('forum_posts').select('*').order('created_at',{ascending:false}).limit(50);
+  $('#forum-list').innerHTML = `<table><tr><th>Группа</th><th>Автор</th><th>Сообщение</th><th>Когда</th></tr>` +
+    (data||[]).map(p=>`<tr><td>${esc(p.group_key)}</td><td>${esc(p.author)}</td><td>${esc(p.body)}</td><td class="num">${new Date(p.created_at).toLocaleString('ru-RU')}</td></tr>`).join('') + '</table>';
+}
+
+/* ---------- Инициализация ---------- */
+$('#e-colors').innerHTML = COLORS.map(c=>`<button class="sw${c===eventColor?' sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></button>`).join('');
+function pickColor(c, el){ eventColor=c; document.querySelectorAll('.sw').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); }
+boot();
+</script>
+</body>
+</html>

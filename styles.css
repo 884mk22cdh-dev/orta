@@ -1,0 +1,254 @@
+/* ============ Расписание студента — стили по дизайну «Расписание студента.dc.html» ============ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#DEE0E8;font-family:'Inter',sans-serif;color:#14161C;-webkit-font-smoothing:antialiased}
+a{color:#6C4FE0;text-decoration:none}
+a:hover{color:#5a3fd0}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+input,select{font-family:inherit}
+
+@keyframes pulse{0%{transform:scale(1);opacity:1}70%{transform:scale(2.4);opacity:0}100%{opacity:0}}
+@keyframes shimmer{0%{background-position:-320px 0}100%{background-position:320px 0}}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes sheetIn{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.skel{background:linear-gradient(90deg,#E6E7EC 25%,#eef0f4 50%,#E6E7EC 75%);background-size:640px 100%;animation:shimmer 1.4s infinite linear;border-radius:12px}
+
+/* ============ Сцена и корпус телефона ============ */
+.stage{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:40px 16px}
+.phone{width:390px;height:844px;max-height:96dvh;background:#F1F2F6;border-radius:46px;box-shadow:0 30px 70px rgba(20,22,28,.18);position:relative;overflow:hidden;display:flex;flex-direction:column}
+@media (max-width:480px){
+  .stage{padding:0}
+  .phone{width:100%;height:100dvh;max-height:none;border-radius:0;box-shadow:none}
+  .statusbar{padding-top:env(safe-area-inset-top)}
+  .tabbar{bottom:calc(16px + env(safe-area-inset-bottom))}
+}
+
+/* ============ Статус-бар ============ */
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;font:600 15px 'Inter';z-index:5;transition:color .25s}
+.statusbar .sb-icons{display:flex;align-items:center;gap:7px}
+.statusbar [data-lucide]{width:17px;height:17px}
+.statusbar [data-lucide="battery-full"]{width:24px;height:17px}
+.statusbar.on-color{color:#fff}
+
+/* ============ Экран ============ */
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;animation:screenIn .28s ease;position:relative}
+.screen::-webkit-scrollbar{display:none}
+.screen-pad{padding:62px 20px 110px}
+.screen-pad--flow{padding-bottom:40px}
+.screen-pad--after-banner{padding-top:16px}
+
+/* ============ Нижняя навигация ============ */
+.tabbar{position:absolute;left:16px;right:16px;bottom:16px;height:64px;background:#6C4FE0;border-radius:999px;display:flex;align-items:center;justify-content:space-around;padding:0 22px;box-shadow:0 14px 30px rgba(108,79,224,.4);z-index:20}
+.tabbar.hidden{display:none}
+.tab{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 10px}
+.tab [data-lucide]{width:24px;height:24px;color:rgba(255,255,255,.6);transition:color .2s}
+.tab .tab-dot{width:5px;height:5px;border-radius:999px;background:transparent}
+.tab.active [data-lucide]{color:#fff}
+.tab.active .tab-dot{background:#fff}
+
+/* ============ Общие компоненты ============ */
+.h1{font:800 28px 'Manrope',sans-serif;letter-spacing:-.5px}
+.h2{font:800 24px 'Manrope',sans-serif;letter-spacing:-.3px}
+.muted{font:400 15px 'Inter';color:#8A8D99}
+.card{background:#fff;border-radius:20px;box-shadow:0 8px 24px rgba(20,22,28,.06)}
+.btn-primary{width:100%;height:56px;background:#6C4FE0;border-radius:16px;display:flex;align-items:center;justify-content:center;font:700 16px 'Manrope';color:#fff;box-shadow:0 12px 28px rgba(108,79,224,.35);transition:transform .12s,background .2s}
+.btn-primary:active{transform:scale(.98);background:#5a3fd0}
+.icon-btn{width:40px;height:40px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(20,22,28,.06);position:relative;flex:none;transition:transform .12s}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn [data-lucide]{width:19px;height:19px;color:#14161C}
+.icon-btn .badge-dot{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:999px;background:#F4564E;border:2px solid #fff}
+
+.chip{padding:11px 20px;border-radius:999px;background:#fff;font:600 14px 'Inter';color:#14161C;box-shadow:0 8px 24px rgba(20,22,28,.06);transition:background .2s,color .2s}
+.chip.active{background:#6C4FE0;color:#fff;box-shadow:0 10px 24px rgba(108,79,224,.3)}
+
+.back-link{display:flex;align-items:center;gap:6px;color:#8A8D99;font:600 15px 'Inter';padding:4px 0}
+.back-link [data-lucide]{width:18px;height:18px}
+
+.section-label{font:600 13px 'Inter';color:#8A8D99;margin:22px 0 10px 4px}
+
+/* ============ Онбординг ============ */
+.onb-hero{height:300px;position:relative;margin:24px 0 8px}
+.onb-card{position:absolute;width:150px;height:190px;border-radius:24px;box-shadow:0 8px 24px rgba(20,22,28,.10)}
+.onb-card--l{left:20px;top:40px;background:#F2B23E;transform:rotate(-8deg)}
+.onb-card--r{right:26px;top:20px;background:#3DB96B;transform:rotate(7deg)}
+.onb-card--c{left:50%;top:60px;transform:translateX(-50%);width:170px;height:220px;background:#6C4FE0;border-radius:26px;box-shadow:0 16px 40px rgba(108,79,224,.35);display:flex;flex-direction:column;justify-content:space-between;padding:20px}
+.onb-card--c .onb-ico{width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center}
+.onb-card--c .onb-ico [data-lucide]{width:24px;height:24px;color:#fff}
+.onb-card--c .onb-title{font:800 20px 'Manrope';color:#fff}
+.onb-card--c .onb-time{font:600 13px 'Inter';color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+.onb-dots{display:flex;gap:6px;justify-content:center;margin-top:20px}
+.onb-dots span{width:6px;height:6px;border-radius:999px;background:#C9CBD4}
+.onb-dots span.active{width:22px;background:#6C4FE0}
+
+.setup-progress{display:flex;gap:8px;margin:20px 0 28px}
+.setup-progress span{flex:1;height:5px;border-radius:999px;background:#E6E7EC}
+.setup-progress span.done{background:#6C4FE0}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+.pick-card{height:96px;background:#fff;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(20,22,28,.06);position:relative;border:2px solid transparent;transition:border-color .15s}
+.pick-card .pick-num{font:800 30px 'Manrope';color:#14161C}
+.pick-card .pick-sub{font:400 13px 'Inter';color:#8A8D99}
+.pick-card.selected{border-color:#6C4FE0;box-shadow:0 8px 24px rgba(108,79,224,.14)}
+.pick-card.selected .pick-num,.pick-card.selected .pick-sub{color:#6C4FE0}
+.pick-check{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:999px;background:#6C4FE0;display:flex;align-items:center;justify-content:center}
+.pick-check [data-lucide]{width:14px;height:14px;color:#fff}
+
+.pick-row{background:#fff;border-radius:20px;padding:18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(20,22,28,.06);border:2px solid transparent;font:600 15px 'Inter';transition:border-color .15s;width:100%;text-align:left}
+.pick-row.selected{border-color:#6C4FE0;color:#6C4FE0}
+.pick-list{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+
+/* ============ Главная: карточки предметов ============ */
+.subject-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.subject-card{position:relative;height:210px;cursor:pointer}
+.subject-card .sc-bg{position:absolute;inset:0;border-radius:24px;-webkit-mask:radial-gradient(circle 30px at 100% 34%, transparent 30px, #000 31px);mask:radial-gradient(circle 30px at 100% 34%, transparent 30px, #000 31px)}
+.subject-card .sc-body{position:relative;height:100%;padding:18px;display:flex;flex-direction:column;color:#fff}
+.subject-card .sc-top{display:flex;align-items:flex-start;justify-content:space-between}
+.subject-card .sc-icon{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center}
+.subject-card .sc-icon [data-lucide]{width:22px;height:22px;color:#fff}
+.subject-card .sc-bookmark{width:32px;height:32px;border-radius:999px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.subject-card .sc-bookmark [data-lucide]{width:16px;height:16px;color:#fff}
+.subject-card .sc-bookmark.on [data-lucide]{fill:#fff}
+.subject-card .sc-time{align-self:center;background:#fff;border-radius:999px;padding:6px 15px;font:700 15px 'Inter';font-variant-numeric:tabular-nums;box-shadow:0 6px 16px rgba(20,22,28,.14);margin:14px 0}
+.subject-card .sc-name{font:800 20px 'Manrope';line-height:1.15;margin-top:auto}
+.subject-card .sc-teacher{display:flex;align-items:center;gap:8px;margin-top:12px}
+.subject-card .sc-ava{width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font:700 10px 'Manrope';flex:none}
+.subject-card .sc-tlabel{font:400 10px 'Inter';color:rgba(255,255,255,.7)}
+.subject-card .sc-tname{font:600 12px 'Inter';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subject-card .sc-teacher>span:last-child{min-width:0}
+
+.plus-btn{width:34px;height:34px;border-radius:999px;background:#6C4FE0;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(108,79,224,.34);transition:transform .12s}
+.plus-btn:active{transform:scale(.9)}
+.plus-btn [data-lucide]{width:20px;height:20px;color:#fff}
+
+/* ============ Расписание ============ */
+.day-row{display:flex;gap:10px;margin-top:20px}
+.day-pill{flex:1;height:64px;border-radius:999px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 8px 24px rgba(20,22,28,.06);border:2px solid transparent;transition:background .2s,border-color .2s}
+.day-pill .dp-name{font:400 12px 'Inter';color:#8A8D99}
+.day-pill .dp-num{font:700 16px 'Manrope';color:#14161C}
+.day-pill.today{background:#6C4FE0;box-shadow:0 10px 24px rgba(108,79,224,.32)}
+.day-pill.today .dp-name{color:rgba(255,255,255,.85)}
+.day-pill.today .dp-num{color:#fff}
+.day-pill.selected:not(.today){background:#fff;border-color:#6C4FE0;box-shadow:none}
+.day-pill.selected:not(.today) .dp-name,.day-pill.selected:not(.today) .dp-num{color:#6C4FE0}
+
+.lesson-list{display:flex;flex-direction:column;gap:12px}
+.lesson-card{min-height:84px;background:#fff;border-radius:20px;padding:12px;display:flex;gap:12px;box-shadow:0 8px 24px rgba(20,22,28,.06);position:relative;border:2px solid transparent;cursor:pointer;text-align:left;width:100%}
+.lesson-card.now{border-color:#6C4FE0;padding:10px 12px}
+.lesson-card .lc-time{width:64px;height:60px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-variant-numeric:tabular-nums;flex:none}
+.lesson-card .lc-time .t1{font:600 15px 'Inter'}
+.lesson-card .lc-time .t2{font:400 13px 'Inter';color:rgba(255,255,255,.8)}
+.lesson-card .lc-main{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:1px 0;min-width:0}
+.lesson-card .lc-name{font:600 17px 'Inter'}
+.lesson-card .lc-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lesson-card .lc-sub{font:400 13px 'Inter';color:#8A8D99;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lesson-card .lc-tag{font:600 11px 'Inter';border-radius:999px;padding:3px 9px;flex:none}
+.lesson-card.cancelled .lc-time{background:#E6E7EC!important;color:#8A8D99}
+.lesson-card.cancelled .lc-time .t1,.lesson-card.cancelled .lc-time .t2{color:#8A8D99;text-decoration:line-through}
+.lesson-card.cancelled .lc-name{color:#8A8D99}
+.lesson-card.cancelled .lc-tag{color:#8A8D99;background:#EEF0F4}
+.now-flag{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:5px}
+.now-flag .nf-dot{position:relative;width:8px;height:8px}
+.now-flag .nf-dot::before,.now-flag .nf-dot::after{content:'';position:absolute;inset:0;border-radius:999px;background:#6C4FE0}
+.now-flag .nf-dot::after{animation:pulse 1.8s infinite}
+.now-flag .nf-label{font:600 11px 'Inter';color:#6C4FE0}
+
+.count-line{font:400 13px 'Inter';color:#8A8D99;margin:22px 0 12px;font-variant-numeric:tabular-nums}
+
+/* ============ Детали занятия ============ */
+.detail-head{height:180px;border-radius:0 0 28px 28px;position:relative;padding:0 24px;color:#fff;flex:none}
+.detail-head .dh-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.detail-head .dh-back{width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center}
+.detail-head .dh-back [data-lucide]{width:22px;height:22px;color:#fff}
+.detail-head .dh-badge{width:44px;height:44px;border-radius:999px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font:800 16px 'Manrope';color:#fff}
+.detail-head .dh-badge [data-lucide]{width:22px;height:22px;color:#fff}
+.detail-head .dh-title{position:absolute;left:24px;bottom:22px}
+.detail-head .dh-title .t{font:800 24px 'Manrope'}
+.detail-head .dh-title .s{font:600 14px 'Inter';color:rgba(255,255,255,.85);font-variant-numeric:tabular-nums;margin-top:4px}
+
+.info-card{background:#fff;border-radius:24px;padding:6px 18px;box-shadow:0 8px 24px rgba(20,22,28,.06)}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #E6E7EC}
+.info-row:last-child{border-bottom:0}
+.info-row .k{font:400 14px 'Inter';color:#8A8D99}
+.info-row .v{font:600 15px 'Inter'}
+.mini-ava{width:26px;height:26px;border-radius:999px;background:#6C4FE0;display:flex;align-items:center;justify-content:center;font:700 10px 'Manrope';color:#fff}
+
+.list-row{background:#fff;border-radius:20px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(20,22,28,.06);width:100%;text-align:left}
+.list-row .lr-left{display:flex;align-items:center;gap:12px;min-width:0}
+.list-row .lr-left>[data-lucide]{width:20px;height:20px;color:#8A8D99;flex:none}
+.list-row .lr-title{font:600 15px 'Inter'}
+.list-row .lr-sub{font:400 13px 'Inter';color:#8A8D99}
+.list-row .lr-soon{font:600 11px 'Inter';color:#8A8D99;background:#EEF0F4;border-radius:999px;padding:4px 10px;flex:none}
+.list-row .lr-chev{width:18px;height:18px;color:#C9CBD4;flex:none}
+.list-row.accent .lr-left>[data-lucide]{color:#6C4FE0}
+
+/* ============ Уведомления ============ */
+.notif{border-radius:20px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.notif .nt-ico{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex:none}
+.notif .nt-ico [data-lucide]{width:20px;height:20px;color:#fff}
+.notif .nt-text{font:500 15px 'Inter';line-height:1.4;flex:1}
+.notif .nt-text b{font-weight:600}
+.notif .nt-when{font:400 13px 'Inter';color:#8A8D99;margin-top:4px}
+.notif .nt-dot{width:8px;height:8px;border-radius:999px;margin-top:6px;flex:none}
+.notif.read{background:#fff!important;box-shadow:0 8px 24px rgba(20,22,28,.06)}
+.notif.read .nt-ico{opacity:.55}
+.notif.read .nt-text{color:#5a5d69}
+.notif.read .nt-dot{display:none}
+
+/* ============ Профиль ============ */
+.avatar-xl{width:80px;height:80px;border-radius:999px;background:#6C4FE0;display:flex;align-items:center;justify-content:center;font:800 30px 'Manrope';color:#fff;box-shadow:0 12px 28px rgba(108,79,224,.3)}
+
+/* ============ Настройки ============ */
+.switch{width:46px;height:28px;border-radius:999px;background:#C9CBD4;position:relative;flex:none;transition:background .2s}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:#fff;transition:left .2s}
+.switch.on{background:#6C4FE0}
+.switch.on::after{left:21px}
+.seg{display:flex;gap:6px;background:#F1F2F6;border-radius:14px;padding:4px}
+.seg button{flex:1;text-align:center;padding:9px 0;border-radius:11px;font:500 13px 'Inter';color:#8A8D99}
+.seg button.active{background:#fff;font-weight:600;color:#14161C;box-shadow:0 4px 10px rgba(20,22,28,.06)}
+.settings-link{display:flex;align-items:center;gap:6px;font:600 14px 'Inter';color:#6C4FE0}
+.settings-link [data-lucide]{width:16px;height:16px}
+
+/* ============ Пустое состояние ============ */
+.empty-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:80px}
+.empty-art{width:150px;height:120px;position:relative;margin-bottom:28px}
+.empty-art .ea-l{position:absolute;left:8px;top:20px;width:70px;height:88px;background:#3DB96B;border-radius:18px;transform:rotate(-9deg);opacity:.9}
+.empty-art .ea-r{position:absolute;right:8px;top:10px;width:70px;height:88px;background:#F2B23E;border-radius:18px;transform:rotate(9deg);opacity:.9}
+.empty-art .ea-c{position:absolute;left:50%;top:0;transform:translateX(-50%);width:78px;height:100px;background:#6C4FE0;border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(108,79,224,.3)}
+.empty-art .ea-c [data-lucide]{width:34px;height:34px;color:#fff}
+.empty-title{font:800 22px 'Manrope'}
+
+/* ============ Офлайн-баннер ============ */
+.offline-banner{margin:58px 20px 0;background:#14161C;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:9px;animation:fadeIn .3s}
+.offline-banner [data-lucide]{width:16px;height:16px;color:#fff;flex:none}
+.offline-banner span{font:500 13px 'Inter';color:#fff}
+
+/* ============ Модалка (bottom sheet) ============ */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(20,22,28,.4);z-index:30;animation:fadeIn .2s}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#F1F2F6;border-radius:28px 28px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));z-index:31;animation:sheetIn .28s ease;max-height:86%;overflow-y:auto;scrollbar-width:none}
+.sheet::-webkit-scrollbar{display:none}
+.sheet-grab{width:44px;height:5px;border-radius:999px;background:#C9CBD4;margin:0 auto 16px}
+.sheet h3{font:800 20px 'Manrope';margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font:600 13px 'Inter';color:#8A8D99;margin-bottom:8px;margin-left:4px}
+.field input{width:100%;height:52px;background:#fff;border:2px solid transparent;border-radius:16px;padding:0 16px;font:500 15px 'Inter';color:#14161C;outline:none;box-shadow:0 8px 24px rgba(20,22,28,.06)}
+.field input:focus{border-color:#6C4FE0}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:40px;height:40px;border-radius:999px;border:3px solid transparent;transition:transform .12s}
+.swatch.selected{border-color:#fff;outline:2px solid #6C4FE0;transform:scale(1.08)}
+.icon-pick{display:flex;gap:10px;flex-wrap:wrap}
+.icon-pick button{width:44px;height:44px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(20,22,28,.06);border:2px solid transparent}
+.icon-pick button.selected{border-color:#6C4FE0}
+.icon-pick button [data-lucide]{width:20px;height:20px;color:#14161C}
+.icon-pick button.selected [data-lucide]{color:#6C4FE0}
+
+/* ============ Тост ============ */
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);background:#14161C;color:#fff;font:500 13px 'Inter';padding:10px 18px;border-radius:999px;z-index:40;white-space:nowrap;animation:toastIn .25s ease;box-shadow:0 10px 24px rgba(20,22,28,.3)}
+
+/* ============ Поиск ============ */
+.search-bar{display:flex;align-items:center;gap:10px;background:#fff;border-radius:999px;padding:0 18px;height:48px;box-shadow:0 8px 24px rgba(20,22,28,.06);margin-top:16px}
+.search-bar [data-lucide]{width:18px;height:18px;color:#8A8D99;flex:none}
+.search-bar input{flex:1;border:0;outline:none;background:none;font:500 15px 'Inter';color:#14161C}
+.search-bar input::placeholder{color:#C9CBD4}

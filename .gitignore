@@ -1,0 +1,43 @@
+# ============================================================
+# ORTA — что НЕ попадает в репозиторий
+# ============================================================
+
+# ── Секреты. Ничего из этого не должно уехать на GitHub ──
+# сертификат подписи и пароль к нему
+*.p12
+*.p8
+*.jks
+*.keystore
+*.key
+*.pem
+*.mobileprovision
+mobile/credentials.json
+# токены и ключи в переменных окружения
+.env
+.env.*
+!.env.example
+*.local
+
+# ── Зависимости и сборка ──
+node_modules/
+mobile/.expo/
+.expo/
+dist/
+web-build/
+build/
+mobile/ios/
+mobile/android/
+expo-env.d.ts
+*.tsbuildinfo
+
+# ── Служебное ──
+.DS_Store
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.orig.*
+.kotlin/
+
+# ── Локальные заметки инструментов ──
+.claude/settings.local.json

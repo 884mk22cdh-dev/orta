@@ -1,0 +1,48 @@
+{
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true,
+      "credentialsSource": "local"
+    },
+    "sim": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "devdevice": {
+      "developmentClient": true,
+      "distribution": "store",
+      "credentialsSource": "local",
+      "autoIncrement": true
+    },
+    "simrelease": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Release"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "/Users/oscaraltynbekov/.app-store-keys/AuthKey_9DCS422K2N.p8",
+        "ascApiKeyId": "9DCS422K2N",
+        "ascApiKeyIssuerId": "cd96e408-5166-45e1-b639-6a3c0d226bbd",
+        "ascAppId": "6807105507"
+      }
+    }
+  }
+}
