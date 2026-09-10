@@ -33,7 +33,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "test": "node --import ./scripts/resolve-hook.mjs --test \"tests/*.test.mjs\"",
+    "buttons": "node scripts/buttons.mjs",
+    "i18n": "node scripts/i18n-audit.mjs",
+    "verify": "npm run check && npm run buttons && npm test"
   },
   "private": true
 }

@@ -1,0 +1,53 @@
+# Проверки при каждом пуше.
+#
+# Все они были написаны раньше, но запускались, только когда о них вспомнят.
+# Теперь запускаются сами, и сломанный код не доедет до телефона незамеченным.
+#
+# Аудит бэкенда сюда не входит: он ходит в живую базу и создаёт тестовые
+# аккаунты. Запускать его на каждый пуш — засорять рабочую базу и упираться
+# в ограничение анонимных входов. Он запускается руками перед выпуском.
+
+name: Проверки
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  mobile:
+    name: Приложение
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Установить зависимости
+        run: npm ci --no-audit --no-fund
+
+      - name: Целостность кода (15 проверок)
+        run: npm run check
+
+      - name: Кнопки и маршруты
+        run: npm run buttons
+
+      - name: Тесты поведения
+        run: npm test
+
+      - name: Русский текст без перевода
+        run: npm run i18n
+
+      # Сборка — самая долгая проверка, поэтому последняя: если код уже
+      # не проходит быстрые, ждать её незачем.
+      - name: Сборка бандла
+        run: npx expo export --platform ios --output-dir /tmp/orta-export
