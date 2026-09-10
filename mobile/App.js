@@ -7,6 +7,7 @@ import { useFonts, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } 
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
 import { ErrorBoundary, setCrashScreen } from './src/crash';
+import { onNetChange, isOnline, probe } from './src/net';
 import { C, man, int, sh, cardShadow, applyTheme, onThemeChange, themeMode } from './src/theme';
 import { setLang, t } from './src/i18n';
 import { Icon, TabBar, PrimaryButton, SwipeBack } from './src/ui';
@@ -73,8 +74,13 @@ function Root() {
   const insets = useSafeAreaInsets();
   const [state, setState] = useState(null); // null = ещё грузим из хранилища
   const [route, setRoute] = useState({ name: 'loading' });
+  const [online, setOnline] = useState(true);
   // запоминаем экран, чтобы в отчёте о падении было видно, где это случилось
   useEffect(() => { setCrashScreen(route.name); }, [route.name]);
+  useEffect(() => {
+    setOnline(isOnline());
+    return onNetChange(setOnline);
+  }, []);
   const [setupStep, setSetupStep] = useState(0);
   const [selectedDay, setSelectedDay] = useState(clampDay(mondayIndex(tzNow())));
   const [query, setQuery] = useState('');
@@ -2113,6 +2119,16 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
         </Pressable>
       </Modal>
 
+      {/* Нет связи — говорим об этом прямо, а не молчим.
+          Расписание при этом на месте: оно хранится на телефоне. */}
+      {!online && !intro && (
+        <Pressable onPress={() => probe()}
+          style={[ss.offline, { top: insets.top + 6 }]}>
+          <Icon name="wifi-off" size={14} color="#fff" />
+          <Text style={int(600, 12.5, { color: '#fff' })}>{t('offlineBanner')}</Text>
+        </Pressable>
+      )}
+
       {/* Тост */}
       {toast && (
         <View style={[ss.toast, { bottom: 96 + insets.bottom }, sh(C.ink, 0.3, 24, 10, 8)]}>
@@ -2154,6 +2170,7 @@ const makeSS = () => StyleSheet.create({
   switchBase: { width: 46, height: 28, borderRadius: 999, backgroundColor: C.dot },
   switchKnob: { position: 'absolute', top: 3, left: 3, width: 22, height: 22, borderRadius: 999, backgroundColor: '#fff' },
   addPhoto: { width: 74, height: 74, borderRadius: 14, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  offline: { position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#C0392B', borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14, zIndex: 50 },
   toast: { position: 'absolute', alignSelf: 'center', backgroundColor: '#14161C', borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18 },
 });
 

@@ -5,6 +5,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './backend-config';
+import { markOnline, markOffline } from './net';
 
 export const BACKEND_ENABLED = /^https:\/\//.test(SUPABASE_URL);
 
@@ -36,6 +37,7 @@ export async function ensureAuth() {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
+      markOnline();
       // Один раз за запуск убеждаемся, что аккаунт за токеном ещё существует.
       // Иначе телефон может бесконечно ходить с мёртвым токеном и получать 403
       // на каждый запрос — включая отправку кода на почту.
@@ -52,8 +54,10 @@ export async function ensureAuth() {
     }
     const { data, error } = await supabase.auth.signInAnonymously();
     if (error) throw error;
+    markOnline();
     return data.user;
   } catch (e) {
+    markOffline();
     return null; // офлайн-режим, приложение продолжает работать локально
   }
 }
@@ -110,7 +114,7 @@ export async function pullSchedule() {
   const user = await ensureAuth();
   if (!user) return FAILED;
   const { data, error } = await supabase.from('lessons').select('*').eq('user_id', user.id);
-  if (error) return FAILED;          // сеть/сервер — трогать локальное нельзя
+  if (error) { markOffline(); return FAILED; }   // сеть/сервер — трогать локальное нельзя
   if (!data?.length) return null;    // расписания просто нет
   return rowsToSchedule(data);
 }
@@ -142,7 +146,7 @@ export async function fetchForum(setup, group) {
     .eq('group_key', groupKey(setup, group))
     .order('created_at', { ascending: false })
     .limit(100);
-  if (error) return FAILED;   // не затираем чат пустотой при сбое
+  if (error) { markOffline(); return FAILED; }   // не затираем чат пустотой при сбое
   return data.slice().reverse().map(r => ({
     id: r.id, author: r.author, text: r.body,
     when: new Date(r.created_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
