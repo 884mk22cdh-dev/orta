@@ -1185,6 +1185,19 @@ export function SettingsScreen({ state, topInset, actions }) {
         <Icon name="chevron-right" size={18} color={C.dot} />
       </Pressable>
 
+      {/* Экран админа раньше не имел входа вовсе — попасть на него было нельзя.
+          Обычному пользователю строку не показываем: ему там нечего делать. */}
+      {!!state.isAdmin && (<>
+        <Text style={s.sectionLabel}>{t('secAdmin')}</Text>
+        <Pressable onPress={() => actions.nav('admin')} style={[s.settingsCard, cardShadow, { paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Icon name="shield" size={18} color={C.purple} />
+            <Text style={int(500, 15)}>{t('adminPanel')}</Text>
+          </View>
+          <Icon name="chevron-right" size={18} color={C.dot} />
+        </Pressable>
+      </>)}
+
       <Text style={s.sectionLabel}>{t('secAccount')}</Text>
       <View style={[s.settingsCard, cardShadow]}>
         {!!state.profile?.email && (
@@ -1283,7 +1296,7 @@ export function AfishaScreen({ events, isAdmin, topInset, actions }) {
     <PullScroll topInset={topInset} onRefresh={() => actions.refreshed()} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: PAD_BOTTOM }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={man(800, 24)}>{t('afisha')}</Text>
-
+        <IconBtn icon="plus" onPress={actions.openEventSheet} />
       </View>
       <Text style={int(400, 15, { color: C.muted, marginTop: 6 })}>{t('afishaSub')}</Text>
       <View style={{ gap: 16, marginTop: 18 }}>
@@ -1520,8 +1533,11 @@ export function FavoritesScreen({ state, topInset, actions }) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <IconBtn icon="chevron-left" onPress={() => actions.nav('profile')} />
-        <Text style={man(800, 24)}>Мои избранные</Text>
+        <Text style={[man(800, 24), { flex: 1 }]}>{t('myFavorites')}</Text>
+        {/* предмет вне расписания — факультатив, самоподготовка */}
+        <IconBtn icon="plus" onPress={actions.openSheet} />
       </View>
+      <Text style={int(400, 12.5, { color: C.muted, marginTop: 8 })}>{t('favHint')}</Text>
       {favs.length ? (
         <View style={s.subjectGrid}>
           {favs.map(sub => (
@@ -1531,6 +1547,7 @@ export function FavoritesScreen({ state, topInset, actions }) {
                 bookmarked
                 onPress={() => sub.__lesson ? actions.openLesson(sub.id) : actions.openSubject(sub)}
                 onBookmark={() => actions.bookmark(sub.id)}
+                onLongPress={() => !sub.__lesson && actions.removeSubject(sub)}
               />
             </View>
           ))}
@@ -2977,7 +2994,7 @@ function AdminTile({ value, label, color }) {
   );
 }
 
-export function AdminScreen({ isAdmin, deviceId, data, busy, asHome, topInset, actions }) {
+export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, topInset, actions }) {
   const [d, setD] = React.useState({ title: '', date: '', place: '', description: '', color: C.purple, icon: 'ticket', photos: [] });
   if (!isAdmin) {
     return (
@@ -3025,6 +3042,34 @@ export function AdminScreen({ isAdmin, deviceId, data, busy, asHome, topInset, a
           <Text style={int(600, 13, { color: C.purple })}>{busy ? '…' : 'Обновить'}</Text>
         </Pressable>
       </View>
+
+      {/* Падения: раньше отчёты некуда было смотреть, теперь они здесь.
+          Одинаковые сообщения сгруппированы — важно, скольких людей задело. */}
+      <Text style={s.sectionLabel}>{t('crashesTitle')}</Text>
+      {!crashes?.length ? (
+        <View style={[s.settingsCard, cardShadow, { paddingVertical: 16, flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
+          <Icon name="check" size={18} color={C.green} />
+          <Text style={int(500, 14, { color: C.muted })}>{t('crashesEmpty')}</Text>
+        </View>
+      ) : crashes.slice(0, 10).map((c, i) => (
+        <View key={i} style={[s.attRow, cardShadow, { alignItems: 'flex-start' }]}>
+          <View style={[s.attBar, { backgroundColor: C.red }]} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={int(600, 13.5)} numberOfLines={2}>{c.message}</Text>
+            <Text style={int(400, 12, { color: C.muted, marginTop: 3 })} numberOfLines={1}>
+              {[c.screen && ('экран ' + c.screen), c.version && ('версия ' + c.version), c.platform]
+                .filter(Boolean).join(' · ')}
+            </Text>
+            <Text style={int(400, 11.5, { color: C.muted, marginTop: 2 })}>
+              {new Date(c.last).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={man(800, 16, { color: C.red })}>{c.count}</Text>
+            <Text style={int(400, 11, { color: C.muted })}>{c.users} чел.</Text>
+          </View>
+        </View>
+      ))}
 
       {/* Статистика */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 18 }}>

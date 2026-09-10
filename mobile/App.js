@@ -21,7 +21,7 @@ import {
   becomeTeacher, myRole, openAttendSession, markByCode, sessionRoster, mySessions, teacherStats, myStudents, studentCard, gradeStudent, teacherReport, excludeStudent, includeStudent, excludedStudents, deleteGrade, deleteSession, setMark as setMarkServer, giveGrade, myGrades, myTeacherMarks,
   fetchEvents, addEventServer, deleteEventServer,
   createGroup, joinGroup, myGroup, leaveGroupServer, getGroupSchedule, getPublicProfile, askAI,
-  adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
+  crashList, adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
   coinsState, coinsClaimDaily, coinsClaimTask, coinsClaimReferral, coinsClaimOwnerBonus,
   savePushToken, sendPushToAll, uploadEventPhoto,
   FAILED, sendEmailCode, verifyEmailCode, attachEmail, verifyAttachedEmail, setPassword, signInPassword, myEmail, fetchMyProfile,
@@ -109,6 +109,7 @@ function Root() {
   const [taskDraft, setTaskDraft] = useState(null);
   const [busyGroup, setBusyGroup] = useState(false);
   const [adminData, setAdminData] = useState(null);
+  const [crashes, setCrashes] = useState([]);
   const [adminBusy, setAdminBusy] = useState(false);
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginSent, setLoginSent] = useState(null); // почта, на которую ушёл код
@@ -417,6 +418,7 @@ function Root() {
       if (name === 'reports') actionsRef.current.reportRefresh();
       if (name === 'admin' && state?.isAdmin && !adminData) {
         adminLoad().then(d => d && setAdminData(d));
+        crashList().then(c => c && setCrashes(c));
       }
       // повторный тап по «домику» на главной — возврат к основному виду
       if (name === 'home' && route.name === 'home') {
@@ -427,7 +429,6 @@ function Root() {
       setRoute({ name });
     },
     setChips: chips => patch({ chips }),
-    toggleAll: () => patch({ showAllSubjects: !state.showAllSubjects }),
     bookmark: id => {
       const b = state.bookmarks.includes(id) ? state.bookmarks.filter(x => x !== id) : [...state.bookmarks, id];
       patch({ bookmarks: b });
@@ -557,10 +558,6 @@ function Root() {
       setLessonDraft(existing
         ? { name: existing.name, start: existing.start, end: existing.end, room: existing.room, teacher: existing.teacher, type: existing.type === 'Лабораторная' ? 'Лаба' : (LESSON_TYPES.includes(existing.type) ? existing.type : 'Лекция'), color: existing.color, cancelled: !!existing.cancelled }
         : { name: '', start: '09:00', end: '10:30', room: '', teacher: '', type: 'Лекция', color: C.purple, cancelled: false });
-    },
-    togglePrivacy: key => {
-      const p = { groupVisible: true, analytics: false, ...(state.privacy || {}) };
-      patch({ privacy: { ...p, [key]: !p[key] } });
     },
     logout: () => {
       Alert.alert('Выйти из аккаунта?', 'Данные этого аккаунта уберутся с телефона — они останутся на сервере и вернутся при следующем входе.', [
@@ -1082,7 +1079,6 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       const info = updateWidget(state.schedule || DEFAULT_STATE.schedule);
       showToast('Виджет: ' + info);
     },
-    soon: () => showToast('Скоро в следующей версии'),
   };
 
   actionsRef.current = actions;
@@ -1600,7 +1596,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
   }
   else if (route.name === 'home' && state?.isTeacher) screen = <TeacherScreen state={state} busy={busyGroup} asHome topInset={top} actions={actions} />;
   else if (route.name === 'home') screen = state?.isAdmin
-    ? <AdminScreen isAdmin asHome deviceId={uidRef.current} data={adminData} busy={adminBusy} topInset={top} actions={actions} />
+    ? <AdminScreen isAdmin asHome deviceId={uidRef.current} data={adminData} crashes={crashes} busy={adminBusy} topInset={top} actions={actions} />
     : <HomeScreen state={state} selectedDay={selectedDay} topInset={top} actions={actions} />;
   else if (route.name === 'afisha') screen = <AfishaScreen events={state.events || []} isAdmin={!!state?.isAdmin} topInset={top} actions={actions} />;
   else if (route.name === 'ai') screen = <AiScreen messages={aiMessages} thinking={aiThinking} onSend={onAiSend} isAdmin={!!state?.isAdmin} topInset={top} bottomInset={insets.bottom} />;
@@ -1626,7 +1622,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
   else if (route.name === 'login') screen = <LoginScreen busy={loginBusy} sentTo={loginSent} sentAt={sentAt} resendIn={resendIn}
     onSendCode={sendCode} onVerify={verifyCode} onPassword={loginWithPassword}
     onBack={() => { if (loginSent) { setLoginSent(null); return; } setSetupStep(0); setRoute({ name: 'onboarding' }); }} topInset={top} />;
-  else if (route.name === 'admin') screen = <AdminScreen isAdmin={!!state?.isAdmin} deviceId={uidRef.current} data={adminData} busy={adminBusy} topInset={top} actions={actions} />;
+  else if (route.name === 'admin') screen = <AdminScreen isAdmin={!!state?.isAdmin} deviceId={uidRef.current} data={adminData} crashes={crashes} busy={adminBusy} topInset={top} actions={actions} />;
   else if (route.name === 'adminStudent') screen = <AdminStudentScreen data={route.data} topInset={top} actions={actions} />;
   else if (route.name === 'event') screen = <EventScreen event={route.data} topInset={top} actions={actions} />;
   else if (route.name === 'notifications') screen = <NotificationsScreen state={state} adminData={adminData} topInset={top} actions={actions} />;
