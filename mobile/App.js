@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
+import { ErrorBoundary, setCrashScreen } from './src/crash';
 import { C, man, int, sh, cardShadow, applyTheme, onThemeChange, themeMode } from './src/theme';
 import { setLang, t } from './src/i18n';
 import { Icon, TabBar, PrimaryButton, SwipeBack } from './src/ui';
@@ -72,6 +73,8 @@ function Root() {
   const insets = useSafeAreaInsets();
   const [state, setState] = useState(null); // null = ещё грузим из хранилища
   const [route, setRoute] = useState({ name: 'loading' });
+  // запоминаем экран, чтобы в отчёте о падении было видно, где это случилось
+  useEffect(() => { setCrashScreen(route.name); }, [route.name]);
   const [setupStep, setSetupStep] = useState(0);
   const [selectedDay, setSelectedDay] = useState(clampDay(mondayIndex(tzNow())));
   const [query, setQuery] = useState('');
@@ -2123,7 +2126,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
   );
 }
 
-export default function App() {
+function AppInner() {
   const [fontsLoaded] = useFonts({
     Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold,
     Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold,
@@ -2157,3 +2160,13 @@ const makeSS = () => StyleSheet.create({
 let ss = makeSS();
 onThemeChange(() => { ss = makeSS(); });
 
+
+// Оболочка снаружи всего: если что-то упадёт при отрисовке, человек увидит
+// понятную страницу с кнопкой, а мы получим отчёт — вместо белого экрана.
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
+    </ErrorBoundary>
+  );
+}

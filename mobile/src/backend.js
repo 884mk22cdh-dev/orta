@@ -776,3 +776,23 @@ export async function importScheduleByCode(code) {
   if (error || !data?.length) return null;
   return rowsToSchedule(data);
 }
+
+/* ---------- Отчёты о падениях ---------- */
+// Отправляем даже без входа: аноним тоже может упасть, и это надо знать.
+export async function reportCrash({ message, stack, screen, version, platform, fatal }) {
+  try {
+    await supabase.rpc('report_crash', {
+      c_message: message, c_stack: stack, c_screen: screen,
+      c_version: version, c_platform: platform, c_fatal: fatal,
+    });
+  } catch {
+    // молча: отчёт о падении не должен ронять приложение
+  }
+}
+
+export async function crashList() {
+  const user = await ensureAuth();
+  if (!user) return null;
+  const { data, error } = await supabase.rpc('crash_list');
+  return error || !data?.ok ? null : (data.crashes || []);
+}
