@@ -344,6 +344,7 @@ const DAYS_FULL = {
 
 export let lang = 'ru';
 export function setLang(l) { if (dict[l]) lang = l; }
+export function getLang() { return lang; }
 export const t = key => (dict[lang] && dict[lang][key]) ?? dict.ru[key] ?? key;
 export function tGreeting() {
   const h = new Date().getHours();

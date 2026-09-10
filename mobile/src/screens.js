@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Animated, Easing, KeyboardAvoidingView, Platform, Image, Keyboard, useWindowDimensions } from 'react-native';
 import { C, man, int, sh, cardShadow, hexRgba, onThemeChange, themeMode } from './theme';
+import { tr } from './tr';
 import { t, tGreeting, tPlural, tMonthsNom, tMonthsGen, tDaysShort, tDaysFull } from './i18n';
 import {
   Icon, IconBtn, Chip, PrimaryButton, SubjectCard, LessonCard, EmptyArt, Skel, Switch, InfoRow, ListRow, PullScroll,
@@ -171,7 +172,7 @@ export function WelcomeScreen({ onNext, onLogin, onTeacher, topInset }) {
       )}
 
       <View style={{ paddingBottom: tiny ? 8 : 24, marginTop: tiny ? 'auto' : short ? 20 : 0 }}>
-        <Text style={man(800, tiny ? 20 : short ? 23 : 26, { letterSpacing: -0.5 })}>Добро пожаловать в ORTA 👋</Text>
+        <Text style={man(800, tiny ? 20 : short ? 23 : 26, { letterSpacing: -0.5 })}>{tr('Добро пожаловать в ORTA 👋')}</Text>
         <Text style={int(400, tiny ? 13.5 : 15, { color: C.muted, marginTop: tiny ? 6 : 10, lineHeight: tiny ? 19 : 22 })}>
           Всё расписание университета — в одном месте. Твои пары, замены и уведомления.
         </Text>
@@ -323,7 +324,7 @@ function SetupCodeStep({ email, sentAt, resendIn, mode, busy, code, setCode, pas
       )}
       <Text style={s.formLabel}>{t('passNew')}</Text>
       <TextInput style={[s.formInput, cardShadow, int(500, 15)]}
-        placeholder="минимум 6 символов" placeholderTextColor={C.dot}
+        placeholder={tr('минимум 6 символов')} placeholderTextColor={C.dot}
         secureTextEntry autoComplete="new-password" textContentType="newPassword"
         editable={!busy} value={pass} onChangeText={setPass} />
       <Text style={int(400, 12.5, { color: C.muted, marginTop: 8, lineHeight: 18 })}>{t('passNewHint')}</Text>
@@ -471,10 +472,10 @@ export function SetupScreen({ step, setup, person, onPerson, onPick, onNext, onB
                 <View style={{ flex: 1, paddingRight: 10 }}>
                   <Text style={int(600, 15, sel ? { color: C.purple } : {})}>{o.name}</Text>
                   {o.kind === 'college' && (
-                    <Text style={int(500, 11.5, { color: C.muted, marginTop: 3 })}>Колледж</Text>
+                    <Text style={int(500, 11.5, { color: C.muted, marginTop: 3 })}>{tr('Колледж')}</Text>
                   )}
                   {o.custom && (
-                    <Text style={int(500, 11.5, { color: C.muted, marginTop: 3 })}>Добавлено вами</Text>
+                    <Text style={int(500, 11.5, { color: C.muted, marginTop: 3 })}>{tr('Добавлено вами')}</Text>
                   )}
                 </View>
                 {sel && <View style={s.pickCheck}><Icon name="check" size={14} color="#fff" /></View>}
@@ -522,7 +523,7 @@ export function SetupScreen({ step, setup, person, onPerson, onPick, onNext, onB
             <Pressable key={String(o)} onPress={() => onPick('course', o)}
               style={[s.pickCard, cardShadow, sel && { borderColor: C.purple, ...sh(C.purple, 0.14, 24, 8, 4) }]}>
               <Text style={man(800, 30, sel ? { color: C.purple } : {})}>{o}</Text>
-              <Text style={int(400, 13, { color: sel ? C.purple : C.muted })}>курс</Text>
+              <Text style={int(400, 13, { color: sel ? C.purple : C.muted })}>{tr('курс')}</Text>
               {sel && <View style={[s.pickCheck, { position: 'absolute', top: 10, right: 10 }]}><Icon name="check" size={14} color="#fff" /></View>}
             </Pressable>
           );
@@ -532,14 +533,14 @@ export function SetupScreen({ step, setup, person, onPerson, onPick, onNext, onB
   } else if (step === 5) {
     body = (
       <ScrollView style={{ flex: 1, marginTop: 20 }} contentContainerStyle={{ gap: 4 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <Text style={s.formLabel}>Имя</Text>
+        <Text style={s.formLabel}>{tr('Имя')}</Text>
         <TextInput style={[s.formInput, cardShadow, int(500, 15)]}
           placeholder={teacher ? 'Айгүль' : 'Оскар'} placeholderTextColor={C.dot}
           value={person.firstName} onChangeText={v => onPerson('firstName', v)} />
-        <Text style={s.formLabel}>Фамилия</Text>
-        <TextInput style={[s.formInput, cardShadow, int(500, 15)]} placeholder="Жанболат" placeholderTextColor={C.dot}
+        <Text style={s.formLabel}>{tr('Фамилия')}</Text>
+        <TextInput style={[s.formInput, cardShadow, int(500, 15)]} placeholder={tr('Жанболат')} placeholderTextColor={C.dot}
           value={person.lastName} onChangeText={v => onPerson('lastName', v)} />
-        <Text style={s.formLabel}>Номер телефона</Text>
+        <Text style={s.formLabel}>{tr('Номер телефона')}</Text>
         <TextInput style={[s.formInput, cardShadow, int(500, 15)]} placeholder="+7 700 700 70 70" placeholderTextColor={C.dot}
           keyboardType="phone-pad" maxLength={16}
           value={person.phone || ''} onChangeText={v => onPerson('phone', formatPhoneKz(v))}
@@ -687,7 +688,7 @@ export function HomeScreen({ state, selectedDay, topInset, actions }) {
         ) : (
           <View style={{ alignItems: 'center', paddingTop: 50 }}>
             <EmptyArt icon="users" />
-            <Text style={man(800, 20)}>Вы не в группе</Text>
+            <Text style={man(800, 20)}>{tr('Вы не в группе')}</Text>
             <Text style={int(400, 14, { color: C.muted, marginTop: 8, textAlign: 'center' })}>
               Чат виден только участникам группы.{'\n'}Вступите по коду от старосты.
             </Text>
@@ -804,7 +805,7 @@ export function ScheduleScreen({ selectedDay, topInset, actions }) {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: PAD_BOTTOM }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text style={man(800, 24)}>Расписание</Text>
+        <Text style={man(800, 24)}>{tr('Расписание')}</Text>
         <IconBtn icon="search" onPress={() => actions.nav('search')} />
       </View>
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 20 }}>
@@ -834,11 +835,11 @@ export function ScheduleScreen({ selectedDay, topInset, actions }) {
       ) : (
         <View style={{ alignItems: 'center', paddingTop: 40 }}>
           <EmptyArt />
-          <Text style={man(800, 22)}>В этот день пар нет</Text>
+          <Text style={man(800, 22)}>{tr('В этот день пар нет')}</Text>
           <Text style={int(400, 15, { color: C.muted, marginTop: 8, textAlign: 'center', lineHeight: 21 })}>
             Добавьте пару кнопкой «+»{'\n'}или откройте календарь
           </Text>
-          <PrimaryButton label="Добавить пару" style={{ marginTop: 18, alignSelf: 'stretch' }}
+          <PrimaryButton label={tr('Добавить пару')} style={{ marginTop: 18, alignSelf: 'stretch' }}
             onPress={() => actions.nav('calendar')} />
         </View>
       )}
@@ -923,7 +924,7 @@ export function NotificationsScreen({ state, adminData, topInset, actions }) {
     return (
       <PullScroll topInset={topInset} onRefresh={actions.adminRefresh} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: PAD_BOTTOM }}>
         <Text style={man(800, 24)}>{t('notifications')}</Text>
-        <Text style={int(400, 13, { color: C.muted, marginTop: 4 })}>Активность в приложении</Text>
+        <Text style={int(400, 13, { color: C.muted, marginTop: 4 })}>{tr('Активность в приложении')}</Text>
         <View style={{ gap: 12, marginTop: 18 }}>
           {items.map(n => (
             <View key={n.id} style={[s.notif, { backgroundColor: C.card }, cardShadow]}>
@@ -937,8 +938,8 @@ export function NotificationsScreen({ state, adminData, topInset, actions }) {
           {!items.length && (
             <View style={{ alignItems: 'center', paddingTop: 50 }}>
               <EmptyArt icon="bell" />
-              <Text style={man(800, 20)}>Пока тихо</Text>
-              <Text style={int(400, 14, { color: C.muted, marginTop: 6 })}>Новые студенты и группы появятся здесь.</Text>
+              <Text style={man(800, 20)}>{tr('Пока тихо')}</Text>
+              <Text style={int(400, 14, { color: C.muted, marginTop: 6 })}>{tr('Новые студенты и группы появятся здесь.')}</Text>
             </View>
           )}
         </View>
@@ -1176,11 +1177,11 @@ export function SettingsScreen({ state, topInset, actions }) {
         ))}
       </View>
 
-      <Text style={s.sectionLabel}>Виджет</Text>
+      <Text style={s.sectionLabel}>{tr('Виджет')}</Text>
       <Pressable onPress={actions.refreshWidget} style={[s.settingsCard, cardShadow, { paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Icon name="refresh-cw" size={18} color={C.purple} />
-          <Text style={int(500, 15)}>Обновить виджет</Text>
+          <Text style={int(500, 15)}>{tr('Обновить виджет')}</Text>
         </View>
         <Icon name="chevron-right" size={18} color={C.dot} />
       </Pressable>
@@ -1387,7 +1388,7 @@ export function AiScreen({ messages, thinking, onSend, isAdmin, topInset, bottom
         ))}
         {thinking && (
           <View style={[s.bubble, s.bubbleAi, cardShadow]}>
-            <Text style={int(500, 15, { color: C.muted })}>Печатает…</Text>
+            <Text style={int(500, 15, { color: C.muted })}>{tr('Печатает…')}</Text>
           </View>
         )}
         {messages.length === 0 && (
@@ -1555,7 +1556,7 @@ export function FavoritesScreen({ state, topInset, actions }) {
       ) : (
         <View style={{ alignItems: 'center', paddingTop: 70 }}>
           <EmptyArt icon="bookmark" />
-          <Text style={man(800, 22)}>Пока пусто</Text>
+          <Text style={man(800, 22)}>{tr('Пока пусто')}</Text>
           <Text style={int(400, 15, { color: C.muted, marginTop: 8, textAlign: 'center' })}>
             Нажмите на закладку на карточке предмета,{'\n'}и он появится здесь.
           </Text>
@@ -1572,7 +1573,7 @@ export function MyPostsScreen({ state, topInset, actions }) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <IconBtn icon="chevron-left" onPress={() => actions.nav('profile')} />
-        <Text style={man(800, 24)}>Мои посты</Text>
+        <Text style={man(800, 24)}>{tr('Мои посты')}</Text>
       </View>
       {mine.length ? (
         <View style={{ gap: 12, marginTop: 18 }}>
@@ -1585,7 +1586,7 @@ export function MyPostsScreen({ state, topInset, actions }) {
               </View>
               <Text style={int(400, 15, { marginTop: 8, lineHeight: 21 })}>{p.text}</Text>
               <Pressable onPress={() => actions.deleteForumPost(p.id)} hitSlop={8} style={{ marginTop: 10, alignSelf: 'flex-start' }}>
-                <Text style={int(600, 13, { color: C.red })}>Удалить</Text>
+                <Text style={int(600, 13, { color: C.red })}>{tr('Удалить')}</Text>
               </Pressable>
             </View>
           ))}
@@ -1593,7 +1594,7 @@ export function MyPostsScreen({ state, topInset, actions }) {
       ) : (
         <View style={{ alignItems: 'center', paddingTop: 70 }}>
           <EmptyArt icon="messages-square" />
-          <Text style={man(800, 22)}>Постов пока нет</Text>
+          <Text style={man(800, 22)}>{tr('Постов пока нет')}</Text>
           <Text style={int(400, 15, { color: C.muted, marginTop: 8, textAlign: 'center' })}>
             Напишите что-нибудь в форум группы{'\n'}на главной странице.
           </Text>
@@ -1619,7 +1620,7 @@ export function MyNotesScreen({ state, topInset, actions }) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <IconBtn icon="chevron-left" onPress={() => actions.nav('profile')} />
-        <Text style={man(800, 24)}>Мои заметки</Text>
+        <Text style={man(800, 24)}>{tr('Мои заметки')}</Text>
       </View>
       {items.length ? (
         <View style={{ gap: 12, marginTop: 18 }}>
@@ -1641,7 +1642,7 @@ export function MyNotesScreen({ state, topInset, actions }) {
       ) : (
         <View style={{ alignItems: 'center', paddingTop: 70 }}>
           <EmptyArt icon="pencil" />
-          <Text style={man(800, 22)}>Заметок пока нет</Text>
+          <Text style={man(800, 22)}>{tr('Заметок пока нет')}</Text>
           <Text style={int(400, 15, { color: C.muted, marginTop: 8, textAlign: 'center' })}>
             Откройте пару и добавьте материалы,{'\n'}домашнее задание или заметку.
           </Text>
@@ -1661,12 +1662,12 @@ export function PrivacyScreen({ privacy, topInset, actions }) {
         <Text style={man(800, 24)}>{t('privacy')}</Text>
       </View>
 
-      <Text style={s.sectionLabel}>Видимость</Text>
+      <Text style={s.sectionLabel}>{tr('Видимость')}</Text>
       <View style={[s.settingsCard, cardShadow]}>
         <View style={s.settingsRow}>
           <View style={{ flex: 1, paddingRight: 12 }}>
-            <Text style={int(500, 15)}>Имя видно одногруппникам</Text>
-            <Text style={int(400, 12, { color: C.muted, marginTop: 2 })}>Вы в группе — участники видят ваше имя в чате и списке</Text>
+            <Text style={int(500, 15)}>{tr('Имя видно одногруппникам')}</Text>
+            <Text style={int(400, 12, { color: C.muted, marginTop: 2 })}>{tr('Вы в группе — участники видят ваше имя в чате и списке')}</Text>
           </View>
           <Icon name="check" size={18} color={C.green} />
         </View>
@@ -1675,7 +1676,7 @@ export function PrivacyScreen({ privacy, topInset, actions }) {
       <View style={[s.settingsCard, cardShadow, { marginTop: 12, paddingVertical: 16 }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <Icon name="shield" size={18} color={C.green} />
-          <Text style={int(600, 15)}>Как хранятся ваши данные</Text>
+          <Text style={int(600, 15)}>{tr('Как хранятся ваши данные')}</Text>
         </View>
         <Text style={int(400, 13, { color: C.muted, lineHeight: 20 })}>
           Расписание, заметки и настройки хранятся на самом устройстве — приложение открывается и работает без интернета.{'\n\n'}
@@ -1686,7 +1687,7 @@ export function PrivacyScreen({ privacy, topInset, actions }) {
 
       <Pressable onPress={actions.clearData} style={({ pressed }) => [s.settingsCard, cardShadow, { marginTop: 12, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', gap: 10 }, pressed && { opacity: 0.7 }]}>
         <Icon name="trash-2" size={18} color={C.red} />
-        <Text style={int(600, 15, { color: C.red })}>Очистить данные приложения</Text>
+        <Text style={int(600, 15, { color: C.red })}>{tr('Очистить данные приложения')}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -1848,7 +1849,7 @@ export function GroupScreen({ group, groupLink, backendEnabled, busyGroup, topIn
       </View>
 
       {!backendEnabled ? (
-        <Text style={int(400, 15, { color: C.muted, textAlign: 'center', marginTop: 60 })}>Нужно подключение к интернету</Text>
+        <Text style={int(400, 15, { color: C.muted, textAlign: 'center', marginTop: 60 })}>{tr('Нужно подключение к интернету')}</Text>
       ) : group ? (
         <>
           <View style={[s.groupHero, sh(C.teal, 0.3, 28, 12, 6)]}>
@@ -3001,12 +3002,12 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <IconBtn icon="chevron-left" onPress={() => actions.nav('settings')} />
-          <Text style={man(800, 24)}>Админ-режим</Text>
+          <Text style={man(800, 24)}>{tr('Админ-режим')}</Text>
         </View>
         <View style={[s.settingsCard, cardShadow, { marginTop: 18, paddingVertical: 18 }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <Icon name="shield" size={18} color={C.purple} />
-            <Text style={int(600, 15)}>Как активировать</Text>
+            <Text style={int(600, 15)}>{tr('Как активировать')}</Text>
           </View>
           <Text style={int(400, 13, { color: C.muted, lineHeight: 20 })}>
             1. Нажмите кнопку ниже — SQL-активация скопируется.{'\n'}
@@ -3015,7 +3016,7 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
             ID устройства: {deviceId ? deviceId.slice(0, 8) + '…' : 'нет соединения'}
           </Text>
         </View>
-        <PrimaryButton label="Скопировать SQL-активацию" onPress={actions.adminCopySql} style={{ marginTop: 16 }} />
+        <PrimaryButton label={tr('Скопировать SQL-активацию')} onPress={actions.adminCopySql} style={{ marginTop: 16 }} />
         <Pressable onPress={actions.adminRecheck} style={{ alignItems: 'center', paddingVertical: 16 }}>
           <Text style={int(600, 15, { color: C.purple })}>{busy ? 'Проверяем…' : 'Проверить доступ'}</Text>
         </Pressable>
@@ -3034,8 +3035,8 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {!asHome && <IconBtn icon="chevron-left" onPress={() => actions.nav('profile')} />}
           <View>
-            <Text style={man(800, 24)}>Админ-панель</Text>
-            {asHome ? <Text style={int(400, 13, { color: C.muted })}>ORTA · дашборд</Text> : null}
+            <Text style={man(800, 24)}>{tr('Админ-панель')}</Text>
+            {asHome ? <Text style={int(400, 13, { color: C.muted })}>{tr('ORTA · дашборд')}</Text> : null}
           </View>
         </View>
         <Pressable onPress={actions.adminRefresh} hitSlop={8}>
@@ -3073,26 +3074,26 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
 
       {/* Статистика */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 18 }}>
-        <AdminTile value={st.users ?? '—'} label="Студентов" color={C.purple} />
-        <AdminTile value={st.groups ?? '—'} label="Групп" color={C.teal} />
-        <AdminTile value={st.posts ?? '—'} label="Постов" color={C.yellow} />
-        <AdminTile value={st.events ?? '—'} label="Событий" color={C.green} />
+        <AdminTile value={st.users ?? '—'} label={tr('Студентов')} color={C.purple} />
+        <AdminTile value={st.groups ?? '—'} label={tr('Групп')} color={C.teal} />
+        <AdminTile value={st.posts ?? '—'} label={tr('Постов')} color={C.yellow} />
+        <AdminTile value={st.events ?? '—'} label={tr('Событий')} color={C.green} />
       </View>
 
       {/* Публикация афиши */}
       <View style={[s.settingsCard, cardShadow, { marginTop: 18, paddingVertical: 16 }]}>
-        <Text style={man(700, 16, { marginBottom: 4 })}>Опубликовать афишу для всех</Text>
-        <Text style={int(400, 12, { color: C.muted, marginBottom: 12 })}>Появится у каждого пользователя в разделе «Афиша»</Text>
-        <TextInput style={[s.formInput, cardShadow, int(500, 15), { marginTop: 0 }]} placeholder="Название" placeholderTextColor={C.dot}
+        <Text style={man(700, 16, { marginBottom: 4 })}>{tr('Опубликовать афишу для всех')}</Text>
+        <Text style={int(400, 12, { color: C.muted, marginBottom: 12 })}>{tr('Появится у каждого пользователя в разделе «Афиша»')}</Text>
+        <TextInput style={[s.formInput, cardShadow, int(500, 15), { marginTop: 0 }]} placeholder={tr('Название')} placeholderTextColor={C.dot}
           value={d.title} onChangeText={v => setD(x => ({ ...x, title: v }))} />
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-          <TextInput style={[s.formInput, cardShadow, int(500, 15), { flex: 1, marginTop: 0 }]} placeholder="10 сентября, 15:00" placeholderTextColor={C.dot}
+          <TextInput style={[s.formInput, cardShadow, int(500, 15), { flex: 1, marginTop: 0 }]} placeholder={tr('10 сентября, 15:00')} placeholderTextColor={C.dot}
             value={d.date} onChangeText={v => setD(x => ({ ...x, date: v }))} />
-          <TextInput style={[s.formInput, cardShadow, int(500, 15), { flex: 1, marginTop: 0 }]} placeholder="Место" placeholderTextColor={C.dot}
+          <TextInput style={[s.formInput, cardShadow, int(500, 15), { flex: 1, marginTop: 0 }]} placeholder={tr('Место')} placeholderTextColor={C.dot}
             value={d.place} onChangeText={v => setD(x => ({ ...x, place: v }))} />
         </View>
         <TextInput style={[s.formInput, cardShadow, int(500, 15), { height: 100, paddingTop: 14, textAlignVertical: 'top', marginTop: 10 }]}
-          placeholder="Описание события (необязательно)" placeholderTextColor={C.dot} multiline
+          placeholder={tr('Описание события (необязательно)')} placeholderTextColor={C.dot} multiline
           value={d.description} onChangeText={v => setD(x => ({ ...x, description: v }))} />
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
           {[C.purple, C.red, C.yellow, C.green, C.blue, C.teal].map(c => (
@@ -3124,12 +3125,12 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
             </Pressable>
           )}
         </ScrollView>
-        <Text style={int(400, 11, { color: C.muted, marginTop: 6, marginLeft: 4 })}>Долгое нажатие — убрать фото</Text>
+        <Text style={int(400, 11, { color: C.muted, marginTop: 6, marginLeft: 4 })}>{tr('Долгое нажатие — убрать фото')}</Text>
         <PrimaryButton label={busy ? 'Публикуем…' : 'Опубликовать'} onPress={publish} style={{ marginTop: 14 }} />
       </View>
 
       {/* Общие события */}
-      <Text style={s.sectionLabel}>События в афише</Text>
+      <Text style={s.sectionLabel}>{tr('События в афише')}</Text>
       <View style={{ gap: 10 }}>
         {(data?.events || []).map(e => (
           <View key={e.id} style={[s.adminRow, cardShadow]}>
@@ -3140,7 +3141,7 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
             </View>
             {!e.user_id && (
               <Pressable onPress={() => actions.adminDelete(e.id)} hitSlop={8}>
-                <Text style={int(600, 12, { color: C.red })}>Удалить</Text>
+                <Text style={int(600, 12, { color: C.red })}>{tr('Удалить')}</Text>
               </Pressable>
             )}
           </View>
@@ -3148,7 +3149,7 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
       </View>
 
       {/* Последние студенты */}
-      <Text style={s.sectionLabel}>Последние студенты</Text>
+      <Text style={s.sectionLabel}>{tr('Последние студенты')}</Text>
       <View style={[s.settingsCard, cardShadow]}>
         {(data?.profiles || []).map((p, i) => (
           <Pressable key={p.id} onPress={() => actions.adminOpenStudent(p)}
@@ -3160,11 +3161,11 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
             <Icon name="chevron-right" size={16} color={C.dot} />
           </Pressable>
         ))}
-        {!(data?.profiles || []).length && <Text style={int(400, 13, { color: C.muted, paddingVertical: 10 })}>Пока никого</Text>}
+        {!(data?.profiles || []).length && <Text style={int(400, 13, { color: C.muted, paddingVertical: 10 })}>{tr('Пока никого')}</Text>}
       </View>
 
       {/* Группы */}
-      <Text style={s.sectionLabel}>Группы</Text>
+      <Text style={s.sectionLabel}>{tr('Группы')}</Text>
       <View style={[s.settingsCard, cardShadow]}>
         {(data?.groups || []).map((g, i) => (
           <View key={g.id} style={[{ paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, i < (data.groups.length - 1) && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
@@ -3175,11 +3176,11 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
             <Text style={[int(600, 13, { color: C.purple }), { letterSpacing: 1.5 }]}>{g.code}</Text>
           </View>
         ))}
-        {!(data?.groups || []).length && <Text style={int(400, 13, { color: C.muted, paddingVertical: 10 })}>Пока нет групп</Text>}
+        {!(data?.groups || []).length && <Text style={int(400, 13, { color: C.muted, paddingVertical: 10 })}>{tr('Пока нет групп')}</Text>}
       </View>
 
       {/* Форум */}
-      <Text style={s.sectionLabel}>Последние посты форумов</Text>
+      <Text style={s.sectionLabel}>{tr('Последние посты форумов')}</Text>
       <View style={[s.settingsCard, cardShadow]}>
         {(data?.posts || []).map((p, i) => (
           <View key={p.id} style={[{ paddingVertical: 10 }, i < (data.posts.length - 1) && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
@@ -3187,7 +3188,7 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
             <Text style={int(400, 13, { color: C.muted, marginTop: 2 })} numberOfLines={2}>{p.body}</Text>
           </View>
         ))}
-        {!(data?.posts || []).length && <Text style={int(400, 13, { color: C.muted, paddingVertical: 10 })}>Пока пусто</Text>}
+        {!(data?.posts || []).length && <Text style={int(400, 13, { color: C.muted, paddingVertical: 10 })}>{tr('Пока пусто')}</Text>}
       </View>
     </ScrollView>
   );
@@ -3212,8 +3213,8 @@ export function AdminStudentScreen({ data, topInset, actions }) {
       {total === 0 ? (
         <View style={{ alignItems: 'center', paddingTop: 70 }}>
           <EmptyArt />
-          <Text style={man(800, 20)}>Расписание не загружено</Text>
-          <Text style={int(400, 14, { color: C.muted, marginTop: 6, textAlign: 'center' })}>Студент ещё не синхронизировал пары с облаком.</Text>
+          <Text style={man(800, 20)}>{tr('Расписание не загружено')}</Text>
+          <Text style={int(400, 14, { color: C.muted, marginTop: 6, textAlign: 'center' })}>{tr('Студент ещё не синхронизировал пары с облаком.')}</Text>
         </View>
       ) : sched.map((day, di) => day.length ? (
         <View key={di} style={{ marginTop: 18 }}>
@@ -3263,14 +3264,14 @@ export function EventScreen({ event, topInset, actions }) {
 
         {event.description ? (
           <>
-            <Text style={man(700, 18, { marginTop: 26 })}>О событии</Text>
+            <Text style={man(700, 18, { marginTop: 26 })}>{tr('О событии')}</Text>
             <Text style={int(400, 15, { color: C.muted, marginTop: 10, lineHeight: 23 })}>{event.description}</Text>
           </>
         ) : null}
 
         {photos.length > 1 ? (
           <>
-            <Text style={man(700, 18, { marginTop: 26, marginBottom: 12 })}>Фотографии</Text>
+            <Text style={man(700, 18, { marginTop: 26, marginBottom: 12 })}>{tr('Фотографии')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
               {photos.slice(1).map((uri, i) => (
                 <Pressable key={uri + i} onPress={() => actions.viewPhoto && actions.viewPhoto(uri)}>
@@ -3281,7 +3282,7 @@ export function EventScreen({ event, topInset, actions }) {
           </>
         ) : null}
 
-        <PrimaryButton label="Поделиться событием" style={{ marginTop: 26 }}
+        <PrimaryButton label={tr('Поделиться событием')} style={{ marginTop: 26 }}
           onPress={() => actions.shareEvent(event)} />
       </View>
     </ScrollView>

@@ -243,5 +243,33 @@ for (const f of SOURCES) {
   ok('нет повторов ключей в словарях', [...new Set(bad)]);
 }
 
+/* 15. Каждая строка из tr('...') должна быть в таблицах kk и en.
+      Иначе правка русского текста молча оставляет казаха без перевода. */
+{
+  const tr = read('src/tr.js');
+  const has = lang => {
+    const at = tr.indexOf(`const ${lang} = {`);
+    const body = tr.slice(at, tr.indexOf('\n};', at));
+    return new Set([...body.matchAll(/^\s*'((?:[^'\\]|\\.)*)':/gm)].map(m => m[1]));
+  };
+  const kk = has('KK'), en = has('EN');
+  const missKk = new Set(), missEn = new Set();
+  for (const f of ['App.js', 'src/screens.js', 'src/ui.js']) {
+    for (const m of read(f).matchAll(/\btr\('((?:[^'\\]|\\.)*)'\)/g)) {
+      const s = m[1];
+      if (!/[а-яА-ЯёЁ]/.test(s)) continue;
+      if (!kk.has(s)) missKk.add(s);
+      if (!en.has(s)) missEn.add(s);
+    }
+  }
+  const bad = [];
+  if (missKk.size) bad.push(`нет в kk: ${missKk.size} (${[...missKk][0].slice(0, 30)}…)`);
+  if (missEn.size) bad.push(`нет в en: ${missEn.size} (${[...missEn][0].slice(0, 30)}…)`);
+  ok('переводы tr() на месте', bad);
+  if (process.argv.includes('--tr')) {
+    for (const s of new Set([...missKk, ...missEn])) console.log(`    '${s}': '',`);
+  }
+}
+
 console.log(problems ? `\n❌ проблем: ${problems}` : '\n✅ всё на месте');
 process.exit(problems ? 1 : 0);

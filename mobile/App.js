@@ -10,6 +10,7 @@ import { ErrorBoundary, setCrashScreen } from './src/crash';
 import { onNetChange, isOnline, probe } from './src/net';
 import { C, man, int, sh, cardShadow, applyTheme, onThemeChange, themeMode } from './src/theme';
 import { setLang, t } from './src/i18n';
+import { tr } from './src/tr';
 import { Icon, TabBar, PrimaryButton, SwipeBack } from './src/ui';
 import { DEFAULT_STATE, SCHEDULE, NOTIFS, PICK_ICONS, EVENT_ICONS, EMPTY_SCHEDULE, mondayIndex, clampDay, setSchedule, toMin, formatPhoneKz, isPhoneValid } from './src/data';
 import { findInstitution } from './src/universities';
@@ -403,8 +404,9 @@ function Root() {
     });
   }, []);
 
+  // Перевод здесь, а не в каждом из 57 мест вызова: строка сама себе ключ.
   const showToast = useCallback(msg => {
-    setToast(msg);
+    setToast(tr(msg));
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 2200);
   }, []);
@@ -560,8 +562,8 @@ function Root() {
         : { name: '', start: '09:00', end: '10:30', room: '', teacher: '', type: 'Лекция', color: C.purple, cancelled: false });
     },
     logout: () => {
-      Alert.alert('Выйти из аккаунта?', 'Данные этого аккаунта уберутся с телефона — они останутся на сервере и вернутся при следующем входе.', [
-        { text: 'Отмена', style: 'cancel' },
+      Alert.alert(tr('Выйти из аккаунта?'), 'Данные этого аккаунта уберутся с телефона — они останутся на сервере и вернутся при следующем входе.', [
+        { text: tr('Отмена'), style: 'cancel' },
         {
           text: 'Выйти', style: 'destructive',
           onPress: async () => {
@@ -587,8 +589,8 @@ function Root() {
       ]);
     },
     clearData: () => {
-      Alert.alert('Очистить все данные?', 'Профиль, предметы, заметки и настройки будут удалены. Это действие нельзя отменить.', [
-        { text: 'Отмена', style: 'cancel' },
+      Alert.alert(tr('Очистить все данные?'), 'Профиль, предметы, заметки и настройки будут удалены. Это действие нельзя отменить.', [
+        { text: tr('Отмена'), style: 'cancel' },
         {
           text: 'Очистить', style: 'destructive',
           onPress: async () => {
@@ -607,8 +609,8 @@ function Root() {
       ]);
     },
     reportPost: p => {
-      Alert.alert('Сообщение от ' + p.author, 'Что сделать?', [
-        { text: 'Отмена', style: 'cancel' },
+      Alert.alert(tr('Сообщение от ') + p.author, 'Что сделать?', [
+        { text: tr('Отмена'), style: 'cancel' },
         {
           text: 'Пожаловаться', style: 'destructive',
           onPress: () => {
@@ -675,7 +677,7 @@ function Root() {
       setGroupTaskSheet(true);
     },
     deleteGroupTask: task => {
-      Alert.alert('Удалить ДЗ?', task.title, [
+      Alert.alert(tr('Удалить ДЗ?'), task.title, [
         { text: t('cancel'), style: 'cancel' },
         {
           text: t('delete'), style: 'destructive',
@@ -1646,25 +1648,25 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
           <Pressable style={ss.backdrop} onPress={() => setSheet(false)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
             <View style={ss.grab} />
-            <Text style={man(800, 20, { marginBottom: 16 })}>Новый предмет</Text>
+            <Text style={man(800, 20, { marginBottom: 16 })}>{tr('Новый предмет')}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={ss.label}>Название</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Например, Философия" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Название')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Например, Философия')} placeholderTextColor={C.dot}
                 value={draft?.name ?? ''} onChangeText={v => setDraft(d => ({ ...d, name: v }))} />
-              <Text style={ss.label}>Время</Text>
+              <Text style={ss.label}>{tr('Время')}</Text>
               <TextInput style={[ss.input, cardShadow]} placeholder="08:00" placeholderTextColor={C.dot}
                 value={draft?.time ?? ''} onChangeText={v => setDraft(d => ({ ...d, time: v }))} />
-              <Text style={ss.label}>Преподаватель</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Имя преподавателя" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Преподаватель')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Имя преподавателя')} placeholderTextColor={C.dot}
                 value={draft?.teacher ?? ''} onChangeText={v => setDraft(d => ({ ...d, teacher: v }))} />
-              <Text style={ss.label}>Цвет</Text>
+              <Text style={ss.label}>{tr('Цвет')}</Text>
               <View style={ss.rowWrap}>
                 {SWATCHES.map(c => (
                   <Pressable key={c} onPress={() => setDraft(d => ({ ...d, color: c }))}
                     style={[ss.swatch, { backgroundColor: c }, draft?.color === c && ss.swatchSel]} />
                 ))}
               </View>
-              <Text style={ss.label}>Иконка</Text>
+              <Text style={ss.label}>{tr('Иконка')}</Text>
               <View style={ss.rowWrap}>
                 {PICK_ICONS.map(ic => (
                   <Pressable key={ic} onPress={() => setDraft(d => ({ ...d, icon: ic }))}
@@ -1673,7 +1675,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   </Pressable>
                 ))}
               </View>
-              <PrimaryButton label="Добавить предмет" onPress={saveDraft} style={{ marginTop: 20 }} />
+              <PrimaryButton label={tr('Добавить предмет')} onPress={saveDraft} style={{ marginTop: 20 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -1688,7 +1690,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
             <Text style={man(800, 20, { marginBottom: 14 })}>{t('newSession')}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <Text style={ss.label}>{t('sessionSubject')}</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Математический анализ" placeholderTextColor={C.dot}
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Математический анализ')} placeholderTextColor={C.dot}
                 value={sessionDraft?.subject ?? ''} onChangeText={v => setSessionDraft(d => ({ ...d, subject: v }))} />
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}>
@@ -1730,11 +1732,11 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   </Pressable>
                 ))}
               </View>
-              <TextInput style={[ss.input, cardShadow]} placeholder="или впишите свою" placeholderTextColor={C.dot}
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('или впишите свою')} placeholderTextColor={C.dot}
                 value={gradeDraft?.value ?? ''} onChangeText={v => setGradeDraft(d => ({ ...d, value: v }))} />
               <Text style={ss.label}>{t('gradeComment')}</Text>
               <TextInput style={[ss.input, cardShadow, { height: 88, paddingTop: 12, textAlignVertical: 'top' }]}
-                placeholder="За что оценка, что подтянуть…" placeholderTextColor={C.dot}
+                placeholder={tr('За что оценка, что подтянуть…')} placeholderTextColor={C.dot}
                 multiline value={gradeDraft?.comment ?? ''} onChangeText={v => setGradeDraft(d => ({ ...d, comment: v }))} />
               <PrimaryButton label={busyGroup ? '…' : t('gradeSave')} onPress={() => !busyGroup && actions.saveGrade()} style={{ marginTop: 16 }} />
             </ScrollView>
@@ -1767,7 +1769,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   ))}
                 </View>
               )}
-              <TextInput style={[ss.input, cardShadow]} placeholder="Например, Матанализ" placeholderTextColor={C.dot}
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Например, Матанализ')} placeholderTextColor={C.dot}
                 value={studentGrade?.subject ?? ''} onChangeText={v => setStudentGrade(d => ({ ...d, subject: v }))} />
               <Text style={ss.label}>{t('gradeValue')}</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
@@ -1778,11 +1780,11 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   </Pressable>
                 ))}
               </View>
-              <TextInput style={[ss.input, cardShadow]} placeholder="или впишите свою" placeholderTextColor={C.dot}
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('или впишите свою')} placeholderTextColor={C.dot}
                 value={studentGrade?.value ?? ''} onChangeText={v => setStudentGrade(d => ({ ...d, value: v }))} />
               <Text style={ss.label}>{t('gradeComment')}</Text>
               <TextInput style={[ss.input, cardShadow, { height: 88, paddingTop: 12, textAlignVertical: 'top' }]}
-                placeholder="За что оценка, что подтянуть…" placeholderTextColor={C.dot}
+                placeholder={tr('За что оценка, что подтянуть…')} placeholderTextColor={C.dot}
                 multiline value={studentGrade?.comment ?? ''} onChangeText={v => setStudentGrade(d => ({ ...d, comment: v }))} />
               <PrimaryButton label={busyGroup ? '…' : t('gradeSave')} onPress={() => !busyGroup && actions.saveStudentGrade()} style={{ marginTop: 16 }} />
             </ScrollView>
@@ -1799,7 +1801,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
             <Text style={man(800, 20, { marginBottom: 4 })}>{t('passChange')}</Text>
             <Text style={int(400, 13, { color: C.muted, marginBottom: 14 })} numberOfLines={1}>{state?.profile?.email}</Text>
             <Text style={ss.label}>{t('passNew')}</Text>
-            <TextInput style={[ss.input, cardShadow]} placeholder="минимум 6 символов" placeholderTextColor={C.dot}
+            <TextInput style={[ss.input, cardShadow]} placeholder={tr('минимум 6 символов')} placeholderTextColor={C.dot}
               secureTextEntry autoComplete="new-password" textContentType="newPassword"
               value={passDraft} onChangeText={setPassDraft} />
             <PrimaryButton label={loginBusy ? '…' : t('save')} onPress={() => !loginBusy && actions.savePassword()} style={{ marginTop: 16 }} />
@@ -1813,27 +1815,27 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
           <Pressable style={ss.backdrop} onPress={() => setGroupTaskSheet(false)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
             <View style={ss.grab} />
-            <Text style={man(800, 20, { marginBottom: 4 })}>Задать ДЗ группе</Text>
-            <Text style={int(400, 13, { color: C.muted, marginBottom: 14 })}>Увидят все, кто в вашей группе</Text>
+            <Text style={man(800, 20, { marginBottom: 4 })}>{tr('Задать ДЗ группе')}</Text>
+            <Text style={int(400, 13, { color: C.muted, marginBottom: 14 })}>{tr('Увидят все, кто в вашей группе')}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={ss.label}>Что задали</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Например, Матан: №12–18" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Что задали')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Например, Матан: №12–18')} placeholderTextColor={C.dot}
                 value={groupTaskDraft?.title ?? ''} onChangeText={v => setGroupTaskDraft(d => ({ ...d, title: v }))} />
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Предмет</Text>
-                  <TextInput style={[ss.input, cardShadow]} placeholder="Математика" placeholderTextColor={C.dot}
+                  <Text style={ss.label}>{tr('Предмет')}</Text>
+                  <TextInput style={[ss.input, cardShadow]} placeholder={tr('Математика')} placeholderTextColor={C.dot}
                     value={groupTaskDraft?.subject ?? ''} onChangeText={v => setGroupTaskDraft(d => ({ ...d, subject: v }))} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Срок</Text>
-                  <TextInput style={[ss.input, cardShadow]} placeholder="5 сентября" placeholderTextColor={C.dot}
+                  <Text style={ss.label}>{tr('Срок')}</Text>
+                  <TextInput style={[ss.input, cardShadow]} placeholder={tr('5 сентября')} placeholderTextColor={C.dot}
                     value={groupTaskDraft?.due ?? ''} onChangeText={v => setGroupTaskDraft(d => ({ ...d, due: v }))} />
                 </View>
               </View>
-              <Text style={ss.label}>Пояснение (необязательно)</Text>
+              <Text style={ss.label}>{tr('Пояснение (необязательно)')}</Text>
               <TextInput style={[ss.input, cardShadow, { height: 88, paddingTop: 12, textAlignVertical: 'top' }]}
-                placeholder="Что именно решать, где взять методичку…" placeholderTextColor={C.dot}
+                placeholder={tr('Что именно решать, где взять методичку…')} placeholderTextColor={C.dot}
                 multiline value={groupTaskDraft?.note ?? ''} onChangeText={v => setGroupTaskDraft(d => ({ ...d, note: v }))} />
 
               <Text style={ss.label}>Материалы — фото ({(groupTaskDraft?.photos || []).length}/5)</Text>
@@ -1850,7 +1852,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   </Pressable>
                 )}
               </View>
-              <Text style={int(400, 11.5, { color: C.muted, marginTop: 6 })}>Долгое нажатие на фото — убрать</Text>
+              <Text style={int(400, 11.5, { color: C.muted, marginTop: 6 })}>{tr('Долгое нажатие на фото — убрать')}</Text>
 
               <PrimaryButton label={busyGroup ? '…' : 'Опубликовать группе'} onPress={() => !busyGroup && actions.publishGroupTask()} style={{ marginTop: 18 }} />
             </ScrollView>
@@ -1864,25 +1866,25 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
           <Pressable style={ss.backdrop} onPress={() => setEventSheet(false)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
             <View style={ss.grab} />
-            <Text style={man(800, 20, { marginBottom: 16 })}>Новое событие</Text>
+            <Text style={man(800, 20, { marginBottom: 16 })}>{tr('Новое событие')}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={ss.label}>Название</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Например, День открытых дверей" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Название')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Например, День открытых дверей')} placeholderTextColor={C.dot}
                 value={eventDraft?.title ?? ''} onChangeText={v => setEventDraft(d => ({ ...d, title: v }))} />
-              <Text style={ss.label}>Дата и время</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="10 сентября, 15:00" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Дата и время')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('10 сентября, 15:00')} placeholderTextColor={C.dot}
                 value={eventDraft?.date ?? ''} onChangeText={v => setEventDraft(d => ({ ...d, date: v }))} />
-              <Text style={ss.label}>Место</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Актовый зал" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Место')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Актовый зал')} placeholderTextColor={C.dot}
                 value={eventDraft?.place ?? ''} onChangeText={v => setEventDraft(d => ({ ...d, place: v }))} />
-              <Text style={ss.label}>Цвет</Text>
+              <Text style={ss.label}>{tr('Цвет')}</Text>
               <View style={ss.rowWrap}>
                 {SWATCHES.map(c => (
                   <Pressable key={c} onPress={() => setEventDraft(d => ({ ...d, color: c }))}
                     style={[ss.swatch, { backgroundColor: c }, eventDraft?.color === c && ss.swatchSel]} />
                 ))}
               </View>
-              <Text style={ss.label}>Иконка</Text>
+              <Text style={ss.label}>{tr('Иконка')}</Text>
               <View style={ss.rowWrap}>
                 {EVENT_ICONS.map(ic => (
                   <Pressable key={ic} onPress={() => setEventDraft(d => ({ ...d, icon: ic }))}
@@ -1891,7 +1893,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   </Pressable>
                 ))}
               </View>
-              <PrimaryButton label="Добавить в афишу" onPress={saveEvent} style={{ marginTop: 20 }} />
+              <PrimaryButton label={tr('Добавить в афишу')} onPress={saveEvent} style={{ marginTop: 20 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -1903,41 +1905,41 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
           <Pressable style={ss.backdrop} onPress={() => setProfileSheet(false)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
             <View style={ss.grab} />
-            <Text style={man(800, 20, { marginBottom: 16 })}>Редактировать профиль</Text>
+            <Text style={man(800, 20, { marginBottom: 16 })}>{tr('Редактировать профиль')}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={ss.label}>Имя</Text>
+              <Text style={ss.label}>{tr('Имя')}</Text>
               <TextInput style={[ss.input, cardShadow]} placeholderTextColor={C.dot}
                 value={profileDraft?.firstName ?? ''} onChangeText={v => setProfileDraft(d => ({ ...d, firstName: v }))} />
-              <Text style={ss.label}>Фамилия</Text>
+              <Text style={ss.label}>{tr('Фамилия')}</Text>
               <TextInput style={[ss.input, cardShadow]} placeholderTextColor={C.dot}
                 value={profileDraft?.lastName ?? ''} onChangeText={v => setProfileDraft(d => ({ ...d, lastName: v }))} />
-              <Text style={ss.label}>Номер телефона</Text>
+              <Text style={ss.label}>{tr('Номер телефона')}</Text>
               <TextInput style={[ss.input, cardShadow]} placeholder="+7 700 700 70 70" placeholderTextColor={C.dot} keyboardType="phone-pad" maxLength={16}
                 value={profileDraft?.phone ?? ''} onChangeText={v => setProfileDraft(d => ({ ...d, phone: formatPhoneKz(v) }))}
                 onFocus={() => setProfileDraft(d => (d.phone ? d : { ...d, phone: '+7 ' }))} />
               {!state?.isAdmin && (
                 <>
-                  <Text style={ss.label}>Университет</Text>
+                  <Text style={ss.label}>{tr('Университет')}</Text>
                   <TextInput style={[ss.input, cardShadow]} placeholderTextColor={C.dot}
                     value={profileDraft?.university ?? ''} onChangeText={v => setProfileDraft(d => ({ ...d, university: v }))} />
-                  <Text style={ss.label}>Факультет</Text>
+                  <Text style={ss.label}>{tr('Факультет')}</Text>
                   <TextInput style={[ss.input, cardShadow]} placeholderTextColor={C.dot}
                     value={profileDraft?.faculty ?? ''} onChangeText={v => setProfileDraft(d => ({ ...d, faculty: v }))} />
                   <View style={{ flexDirection: 'row', gap: 12 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={ss.label}>Курс (1–4)</Text>
+                      <Text style={ss.label}>{tr('Курс (1–4)')}</Text>
                       <TextInput style={[ss.input, cardShadow]} keyboardType="number-pad" placeholderTextColor={C.dot}
                         value={String(profileDraft?.course ?? '')} onChangeText={v => setProfileDraft(d => ({ ...d, course: v }))} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={ss.label}>Группа</Text>
+                      <Text style={ss.label}>{tr('Группа')}</Text>
                       <TextInput style={[ss.input, cardShadow]} placeholderTextColor={C.dot}
                         value={profileDraft?.group ?? ''} onChangeText={v => setProfileDraft(d => ({ ...d, group: v }))} />
                     </View>
                   </View>
                 </>
               )}
-              <PrimaryButton label="Сохранить" onPress={saveProfile} style={{ marginTop: 16 }} />
+              <PrimaryButton label={tr('Сохранить')} onPress={saveProfile} style={{ marginTop: 16 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -1949,31 +1951,31 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
           <Pressable style={ss.backdrop} onPress={() => setExamSheet(false)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
             <View style={ss.grab} />
-            <Text style={man(800, 20, { marginBottom: 16 })}>Новый экзамен</Text>
+            <Text style={man(800, 20, { marginBottom: 16 })}>{tr('Новый экзамен')}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={ss.label}>Предмет</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Математика" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Предмет')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Математика')} placeholderTextColor={C.dot}
                 value={examDraft?.subject ?? ''} onChangeText={v => setExamDraft(d => ({ ...d, subject: v }))} />
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Дата</Text>
-                  <TextInput style={[ss.input, cardShadow]} placeholder="24 января" placeholderTextColor={C.dot}
+                  <Text style={ss.label}>{tr('Дата')}</Text>
+                  <TextInput style={[ss.input, cardShadow]} placeholder={tr('24 января')} placeholderTextColor={C.dot}
                     value={examDraft?.date ?? ''} onChangeText={v => setExamDraft(d => ({ ...d, date: v }))} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Время</Text>
+                  <Text style={ss.label}>{tr('Время')}</Text>
                   <TextInput style={[ss.input, cardShadow]} placeholder="09:00" placeholderTextColor={C.dot}
                     value={examDraft?.time ?? ''} onChangeText={v => setExamDraft(d => ({ ...d, time: v }))} />
                 </View>
               </View>
-              <Text style={ss.label}>Аудитория</Text>
+              <Text style={ss.label}>{tr('Аудитория')}</Text>
               <TextInput style={[ss.input, cardShadow]} placeholder="214" placeholderTextColor={C.dot}
                 value={examDraft?.room ?? ''} onChangeText={v => setExamDraft(d => ({ ...d, room: v }))} />
-              <Text style={ss.label}>Описание (необязательно)</Text>
+              <Text style={ss.label}>{tr('Описание (необязательно)')}</Text>
               <TextInput style={[ss.input, cardShadow, { height: 92, paddingTop: 12, textAlignVertical: 'top' }]}
-                placeholder="Что взять с собой, какие темы, устно или письменно…" placeholderTextColor={C.dot}
+                placeholder={tr('Что взять с собой, какие темы, устно или письменно…')} placeholderTextColor={C.dot}
                 multiline value={examDraft?.note ?? ''} onChangeText={v => setExamDraft(d => ({ ...d, note: v }))} />
-              <PrimaryButton label="Добавить экзамен" onPress={saveExam} style={{ marginTop: 16 }} />
+              <PrimaryButton label={tr('Добавить экзамен')} onPress={saveExam} style={{ marginTop: 16 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -1987,34 +1989,34 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
             <View style={ss.grab} />
             <Text style={man(800, 20, { marginBottom: 16 })}>{lessonSheet?.existing ? 'Изменить пару' : 'Новая пара'}</Text>
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Text style={ss.label}>Предмет</Text>
-              <TextInput style={[ss.input, cardShadow]} placeholder="Математика" placeholderTextColor={C.dot}
+              <Text style={ss.label}>{tr('Предмет')}</Text>
+              <TextInput style={[ss.input, cardShadow]} placeholder={tr('Математика')} placeholderTextColor={C.dot}
                 value={lessonDraft?.name ?? ''} onChangeText={v => setLessonDraft(d => ({ ...d, name: v }))} />
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Начало</Text>
+                  <Text style={ss.label}>{tr('Начало')}</Text>
                   <TextInput style={[ss.input, cardShadow]} placeholder="09:00" placeholderTextColor={C.dot}
                     value={lessonDraft?.start ?? ''} onChangeText={v => setLessonDraft(d => ({ ...d, start: v }))} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Конец</Text>
+                  <Text style={ss.label}>{tr('Конец')}</Text>
                   <TextInput style={[ss.input, cardShadow]} placeholder="10:30" placeholderTextColor={C.dot}
                     value={lessonDraft?.end ?? ''} onChangeText={v => setLessonDraft(d => ({ ...d, end: v }))} />
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={ss.label}>Аудитория</Text>
+                  <Text style={ss.label}>{tr('Аудитория')}</Text>
                   <TextInput style={[ss.input, cardShadow]} placeholder="214" placeholderTextColor={C.dot}
                     value={lessonDraft?.room ?? ''} onChangeText={v => setLessonDraft(d => ({ ...d, room: v }))} />
                 </View>
                 <View style={{ flex: 2 }}>
-                  <Text style={ss.label}>Преподаватель</Text>
-                  <TextInput style={[ss.input, cardShadow]} placeholder="Имя преподавателя" placeholderTextColor={C.dot}
+                  <Text style={ss.label}>{tr('Преподаватель')}</Text>
+                  <TextInput style={[ss.input, cardShadow]} placeholder={tr('Имя преподавателя')} placeholderTextColor={C.dot}
                     value={lessonDraft?.teacher ?? ''} onChangeText={v => setLessonDraft(d => ({ ...d, teacher: v }))} />
                 </View>
               </View>
-              <Text style={ss.label}>Тип занятия</Text>
+              <Text style={ss.label}>{tr('Тип занятия')}</Text>
               <View style={ss.rowWrap}>
                 {LESSON_TYPES.map(tp => {
                   const sel = lessonDraft?.type === tp;
@@ -2026,7 +2028,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                   );
                 })}
               </View>
-              <Text style={ss.label}>Цвет</Text>
+              <Text style={ss.label}>{tr('Цвет')}</Text>
               <View style={ss.rowWrap}>
                 {SWATCHES.map(c => (
                   <Pressable key={c} onPress={() => setLessonDraft(d => ({ ...d, color: c }))}
@@ -2035,7 +2037,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
               </View>
               {lessonSheet?.existing && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, marginHorizontal: 4 }}>
-                  <Text style={int(500, 15)}>Пара отменена</Text>
+                  <Text style={int(500, 15)}>{tr('Пара отменена')}</Text>
                   <Pressable onPress={() => setLessonDraft(d => ({ ...d, cancelled: !d.cancelled }))}
                     style={[ss.switchBase, lessonDraft?.cancelled && { backgroundColor: C.red }]}>
                     <View style={[ss.switchKnob, lessonDraft?.cancelled && { left: 21 }]} />
@@ -2045,7 +2047,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
               <PrimaryButton label={lessonSheet?.existing ? 'Сохранить' : 'Добавить пару'} onPress={saveLesson} style={{ marginTop: 16 }} />
               {lessonSheet?.existing && (
                 <Pressable onPress={deleteLesson} style={{ alignItems: 'center', paddingVertical: 14 }}>
-                  <Text style={int(600, 15, { color: C.red })}>Удалить пару</Text>
+                  <Text style={int(600, 15, { color: C.red })}>{tr('Удалить пару')}</Text>
                 </Pressable>
               )}
             </ScrollView>
@@ -2085,7 +2087,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
             <Text style={man(800, 20, { marginBottom: 16 })}>{fieldEdit?.label}</Text>
             <TextInput
               style={[ss.input, cardShadow, { height: 120, paddingTop: 14, textAlignVertical: 'top' }]}
-              placeholder="Запиши сюда всё важное…"
+              placeholder={tr('Запиши сюда всё важное…')}
               placeholderTextColor={C.dot}
               multiline
               value={fieldEdit?.value ?? ''}
@@ -2102,8 +2104,8 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
                 <Icon name="plus" size={22} color={C.purple} />
               </Pressable>
             </ScrollView>
-            <Text style={int(400, 11, { color: C.muted, marginTop: 6, marginLeft: 4 })}>Тап — открыть, долгое нажатие — удалить фото</Text>
-            <PrimaryButton label="Сохранить" onPress={saveFieldEdit} style={{ marginTop: 12 }} />
+            <Text style={int(400, 11, { color: C.muted, marginTop: 6, marginLeft: 4 })}>{tr('Тап — открыть, долгое нажатие — удалить фото')}</Text>
+            <PrimaryButton label={tr('Сохранить')} onPress={saveFieldEdit} style={{ marginTop: 12 }} />
           </View>
         </KeyboardAvoidingView>
       </Modal>
