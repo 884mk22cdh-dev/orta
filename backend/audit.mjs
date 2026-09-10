@@ -240,6 +240,23 @@ if (PAT) {
 /* уборка */
 for (const p of [mate, owner, kid]) { try { await p.c.rpc('leave_group'); } catch (e) {} }
 
+/* ───────── УБОРКА ЗА СОБОЙ ─────────
+   Каждый прогон создаёт ~10 анонимных аккаунтов. Раньше они копились:
+   к этому моменту в базе их набралось под сотню, и аудит сам же на них
+   ругался. Теперь чистим сразу — по своей метке, чужого не трогая. */
+head('Уборка');
+try {
+  const mine = `is_anonymous and (email is null or email = '') and id in (
+      select p.id from profiles p
+       where p.last_name = 'Аудит' or p.university = 'Аудит-универ')`;
+  const before = await sql(`select count(*) n from auth.users where ${mine}`);
+  await sql(`delete from auth.users where ${mine}`);
+  const left = await sql(`select count(*) n from auth.users where ${mine}`);
+  ck(Number(left[0].n) === 0, `тестовые аккаунты убраны: ${before[0].n}`);
+} catch (e) {
+  wk(false, `уборка не удалась: ${e.message} — почистите вручную`);
+}
+
 console.log(`\n${'═'.repeat(46)}`);
 console.log(fail ? `❌ ОШИБОК: ${fail}` : '✅ ошибок нет');
 if (warn) console.log(`⚠️  замечаний: ${warn}`);
