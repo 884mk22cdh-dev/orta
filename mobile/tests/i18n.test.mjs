@@ -115,3 +115,28 @@ test('связь: подписчик получает только настоя�
   net.markOnline();
   assert.deepEqual(seen, [false, true]);
 });
+
+/* ─────────── Фильтр чата (App Store 1.2) ─────────── */
+test('фильтр пропускает обычные сообщения студентов', async () => {
+  const { checkPost } = await import('../src/moderation.js');
+  for (const ok of [
+    'Привет, когда пара по матану?', 'Кто скинет конспект?', 'Сукно для стола',
+    'Хуанхэ — река в Китае', 'Экзамен 5 числа в 214 аудитории', 'Хорошо, договорились',
+  ]) assert.equal(checkPost(ok), null, `не должно блокировать: «${ok}»`);
+});
+
+test('фильтр ловит брань, в том числе замаскированную', async () => {
+  const { checkPost } = await import('../src/moderation.js');
+  for (const bad of ['Иди на хуй', 'ты сука', 'fuck this', 'х у й', 'х*й', 'ху0й', 'б л я д ь', 'f*ck']) {
+    assert.equal(checkPost(bad), 'modProfanity', `должно блокировать: «${bad}»`);
+  }
+});
+
+test('фильтр отсекает пустое, слишком длинное и крик', async () => {
+  const { checkPost } = await import('../src/moderation.js');
+  assert.equal(checkPost(''), 'modEmpty');
+  assert.equal(checkPost('   '), 'modEmpty');
+  assert.equal(checkPost('a'.repeat(1200)), 'modTooLong');
+  assert.equal(checkPost('ЭТО ОЧЕНЬ ВАЖНОЕ СООБЩЕНИЕ ДЛЯ ВСЕХ'), 'modCaps');
+  assert.equal(checkPost('ОК'), null, 'короткие заглавные — не крик');
+});

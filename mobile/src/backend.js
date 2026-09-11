@@ -800,3 +800,14 @@ export async function crashList() {
   const { data, error } = await supabase.rpc('crash_list');
   return error || !data?.ok ? null : (data.crashes || []);
 }
+
+// Удаление аккаунта из приложения — требование App Store 5.1.1(v).
+// Удаляет и данные на сервере, и саму запись входа: вернуться нельзя.
+export async function deleteMyAccount() {
+  const user = await ensureAuth();
+  if (!user) return { error: 'Нет соединения с сервером' };
+  const { data, error } = await supabase.rpc('delete_my_account');
+  if (error) return { error: error.message };
+  if (data?.ok) await supabase.auth.signOut().catch(() => {});
+  return data;
+}

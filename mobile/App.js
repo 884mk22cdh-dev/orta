@@ -8,6 +8,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } f
 
 import { ErrorBoundary, setCrashScreen } from './src/crash';
 import { onNetChange, isOnline, probe } from './src/net';
+import { checkPost } from './src/moderation';
 import { C, man, int, sh, cardShadow, applyTheme, onThemeChange, themeMode } from './src/theme';
 import { setLang, t } from './src/i18n';
 import { tr } from './src/tr';
@@ -22,7 +23,7 @@ import {
   becomeTeacher, myRole, openAttendSession, markByCode, sessionRoster, mySessions, teacherStats, myStudents, studentCard, gradeStudent, teacherReport, excludeStudent, includeStudent, excludedStudents, deleteGrade, deleteSession, setMark as setMarkServer, giveGrade, myGrades, myTeacherMarks,
   fetchEvents, addEventServer, deleteEventServer,
   createGroup, joinGroup, myGroup, leaveGroupServer, getGroupSchedule, getPublicProfile, askAI,
-  crashList, adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
+  crashList, deleteMyAccount, adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
   coinsState, coinsClaimDaily, coinsClaimTask, coinsClaimReferral, coinsClaimOwnerBonus,
   savePushToken, sendPushToAll, uploadEventPhoto,
   FAILED, sendEmailCode, verifyEmailCode, attachEmail, verifyAttachedEmail, setPassword, signInPassword, myEmail, fetchMyProfile,
@@ -503,6 +504,10 @@ function Root() {
     },
     editLessonField: (lessonId, field, label, value, photos) => setFieldEdit({ lessonId, field, label, value, photos: photos || [] }),
     addForumPost: text => {
+      // Правило App Store 1.2: явную брань не пропускаем, иначе приложение
+      // с чатом не примут. Всё остальное разбирается жалобами.
+      const why = checkPost(text);
+      if (why) { showToast(t(why)); return; }
       patch({ forum: [...(state.forum || []), { id: 'f-' + Date.now(), author: state.profile.firstName, text, when: 'только что', mine: true }] });
       if (BACKEND_ENABLED) {
         sendForumPost(state.setup, state.group, state.profile.firstName, text).then(ok => {
@@ -585,6 +590,37 @@ function Root() {
             setSetupStep(0);
             setRoute({ name: 'onboarding' });
           },
+        },
+      ]);
+    },
+    // Правило App Store 5.1.1(v): удаление аккаунта должно быть в приложении.
+    // Спрашиваем дважды — действие необратимое, и данные уходят с сервера тоже.
+    deleteAccount: () => {
+      Alert.alert(t('delAccount') + '?', t('delAccountWarn'), [
+        { text: tr('Отмена'), style: 'cancel' },
+        {
+          text: t('delAccountGo'), style: 'destructive',
+          onPress: () => Alert.alert(t('delAccountSure'), t('delAccountSureSub'), [
+            { text: tr('Отмена'), style: 'cancel' },
+            {
+              text: t('delAccountGo'), style: 'destructive',
+              onPress: async () => {
+                setBusyGroup(true);
+                const r = await deleteMyAccount();
+                setBusyGroup(false);
+                if (!r || r.error) { showToast(t('delAccountFail')); return; }
+                // на телефоне тоже ничего не оставляем
+                try { await AsyncStorage.removeItem(LS_KEY); } catch (e) {}
+                const fresh = JSON.parse(JSON.stringify(DEFAULT_STATE));
+                setSchedule(fresh.schedule);
+                setAiMessages([]);
+                setState(fresh);
+                setSetupStep(0);
+                setRoute({ name: 'onboarding' });
+                showToast(t('delAccountDone'));
+              },
+            },
+          ]),
         },
       ]);
     },

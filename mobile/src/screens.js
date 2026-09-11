@@ -715,6 +715,9 @@ function ForumSection({ posts, onPost, onReport, blocked, groupName }) {
   return (
     <View style={{ marginTop: 24 }}>
       <Text style={man(700, 19, { marginHorizontal: 4 })}>{t('forumTitle')}{groupName ? ' · ' + groupName : ''}</Text>
+      {/* Правило App Store 1.2: человек должен видеть, по каким правилам
+          работает чат и как пожаловаться. */}
+      <Text style={int(400, 12, { color: C.muted, marginHorizontal: 4, marginTop: 6, lineHeight: 17 })}>{t('chatRules')}</Text>
       <View style={{ gap: 12, marginTop: 14 }}>
         {posts.filter(p => !(blocked || []).includes(p.author)).map(p => (
           <Pressable key={p.id} onLongPress={() => !p.mine && onReport(p)} style={[s.forumPost, cardShadow]}>
@@ -1226,10 +1229,21 @@ export function SettingsScreen({ state, topInset, actions }) {
           </View>
           <Icon name="chevron-right" size={18} color={C.dot} />
         </Pressable>
-        <Pressable style={s.settingsRow} onPress={actions.logout}>
+        <Pressable style={[s.settingsRow, { borderBottomWidth: 1, borderBottomColor: C.border }]} onPress={actions.logout}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Icon name="log-out" size={18} color={C.red} />
             <Text style={int(500, 15, { color: C.red })}>{t('logout')}</Text>
+          </View>
+        </Pressable>
+        {/* Правило App Store 5.1.1(v): раз аккаунт можно завести, его должно
+            быть можно и удалить прямо из приложения — не письмом в поддержку. */}
+        <Pressable style={s.settingsRow} onPress={actions.deleteAccount}>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Icon name="trash-2" size={18} color={C.red} />
+              <Text style={int(500, 15, { color: C.red })}>{t('delAccount')}</Text>
+            </View>
+            <Text style={int(400, 12, { color: C.muted, marginTop: 4, marginLeft: 28 })}>{t('delAccountSub')}</Text>
           </View>
         </Pressable>
       </View>
