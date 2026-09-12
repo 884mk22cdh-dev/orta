@@ -113,7 +113,7 @@ SendGrid (100 писем/день).
 кода разом:
 
 ```bash
-cd "/Users/oscaraltynbekov/новый проект "
+cd "/Users/oscaraltynbekov/новый проект"
 SUPABASE_PAT=sbp_xxx \
 SMTP_HOST=smtp-relay.brevo.com \
 SMTP_PORT=587 \
