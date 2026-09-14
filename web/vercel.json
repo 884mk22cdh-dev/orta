@@ -1,8 +1,8 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/i/:id", "destination": "/go.html" },
-    { "source": "/g/:code", "destination": "/go.html" }
+    { "source": "/i/:id", "destination": "/go" },
+    { "source": "/g/:code", "destination": "/go" }
   ],
   "headers": [
     {
