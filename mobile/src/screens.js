@@ -8,7 +8,7 @@ import {
 } from './ui';
 import {
   SCHEDULE, NOTIFS, DAY_NAMES,
-  weekDates, mondayIndex, toMin, nowMin, isToday, plural, findLesson, daysToFirstExam, formatPhoneKz,
+  weekDates, mondayIndex, toMin, nowMin, isToday, plural, findLesson, findLessonBySubject, subjectKey, lessonFields, daysToFirstExam, formatPhoneKz,
 } from './data';
 import { CITIES, institutionsOfCity, findInstitution } from './universities';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -854,7 +854,7 @@ export function ScheduleScreen({ selectedDay, topInset, actions }) {
 export function LessonScreen({ id, group, lessonData, topInset, actions }) {
   const l = findLesson(id) || SCHEDULE.flat()[0];
   if (!l) return null;
-  const ld = (lessonData && lessonData[l.id]) || {};
+  const ld = lessonFields(lessonData, l);
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <View style={[s.detailHead, { backgroundColor: l.color, paddingTop: topInset + 8, height: topInset + 8 + 126 }]}>
@@ -897,7 +897,7 @@ export function LessonScreen({ id, group, lessonData, topInset, actions }) {
               <ListRow key={field} icon={ic} title={label}
                 sub={sub || t('tapToAdd')}
                 accent={!!sub}
-                onPress={() => actions.editLessonField(l.id, field, label, ld[field] || '', photos)}
+                onPress={() => actions.editLessonField(subjectKey(l.name), field, label, ld[field] || '', photos)}
                 right={<Icon name="chevron-right" size={18} color={C.dot} />} />
             );
           })}
@@ -1011,7 +1011,7 @@ export function ProfileScreen({ state, streak = 0, topInset, actions }) {
   const favCount = state.subjects.filter(x => state.bookmarks.includes(x.id)).length;
   const postCount = (state.forum || []).filter(x => x.mine || x.author === p.firstName).length;
   const noteCount = Object.entries(state.lessonData || {}).reduce((n, [id, f]) =>
-    n + (findLesson(id) ? Object.values(f || {}).filter(v => typeof v === 'string' && v.trim()).length : 0), 0);
+    n + ((id.startsWith('subj:') ? findLessonBySubject(id) : findLesson(id)) ? Object.values(f || {}).filter(v => typeof v === 'string' && v.trim()).length : 0), 0);
   const weeklyCount = (state.schedule || []).flat().filter(l => !l.cancelled).length;
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: PAD_BOTTOM }} showsVerticalScrollIndicator={false}>
@@ -1624,7 +1624,7 @@ const NOTE_LABELS = { materials: 'Материалы', hw: 'Домашнее з�
 export function MyNotesScreen({ state, topInset, actions }) {
   const items = [];
   Object.entries(state.lessonData || {}).forEach(([lessonId, fields]) => {
-    const lesson = findLesson(lessonId);
+    const lesson = lessonId.startsWith('subj:') ? findLessonBySubject(lessonId) : findLesson(lessonId);
     if (!lesson) return;
     Object.entries(fields || {}).forEach(([field, text]) => {
       if (typeof text === 'string' && text.trim() && !field.endsWith('_photos')) items.push({ lessonId, lesson, field, text });

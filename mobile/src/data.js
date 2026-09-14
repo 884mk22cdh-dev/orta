@@ -143,6 +143,23 @@ export function findLesson(id) {
   return null;
 }
 
+/* Материалы, ДЗ и заметки привязаны к предмету, а не к отдельной паре:
+   фото с лекции по математике должно быть видно и на вторничной, и на
+   четверговой математике. Ключ — название предмета без регистра. */
+export const subjectKey = name => 'subj:' + String(name || '').trim().toLowerCase();
+
+/* Любая пара этого предмета — чтобы показать цвет и название в списке заметок */
+export function findLessonBySubject(key) {
+  for (const day of SCHEDULE) for (const l of day) if (subjectKey(l.name) === key) return l;
+  return null;
+}
+
+/* Данные по предмету + то, что раньше сохранили на конкретную пару */
+export function lessonFields(lessonData, lesson) {
+  const ld = lessonData || {};
+  return { ...(ld[lesson.id] || {}), ...(ld[subjectKey(lesson.name)] || {}) };
+}
+
 /* «12 января» → ближайшая будущая дата; null, если не распознали */
 export function parseRuDate(text) {
   const m = String(text || '').toLowerCase().match(/(\d{1,2})\s+([а-яё]+)/);

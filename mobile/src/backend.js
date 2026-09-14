@@ -172,6 +172,7 @@ export async function fetchEvents() {
   return data.map(r => ({
     id: r.id, title: r.title, date: r.date_text, place: r.place,
     color: r.color, icon: r.icon, custom: r.user_id === user.id,
+    university: r.university || '', official: r.user_id === null,
     photos: Array.isArray(r.photos) ? r.photos : [],
     description: r.description || '',
   }));
@@ -180,9 +181,10 @@ export async function fetchEvents() {
 export async function addEventServer(ev) {
   const user = await ensureAuth();
   if (!user) return false;
+  // Событие студента видит весь его университет (RLS сверяет university с профилем)
   const { error } = await supabase.from('events').insert({
     user_id: user.id, title: ev.title, date_text: ev.date, place: ev.place,
-    color: ev.color, icon: ev.icon,
+    color: ev.color, icon: ev.icon, university: ev.university || null,
   });
   return !error;
 }

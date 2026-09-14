@@ -13,7 +13,7 @@ import { C, man, int, sh, cardShadow, applyTheme, onThemeChange, themeMode } fro
 import { setLang, t } from './src/i18n';
 import { tr } from './src/tr';
 import { Icon, TabBar, PrimaryButton, SwipeBack } from './src/ui';
-import { DEFAULT_STATE, SCHEDULE, NOTIFS, PICK_ICONS, EVENT_ICONS, EMPTY_SCHEDULE, mondayIndex, clampDay, setSchedule, toMin, formatPhoneKz, isPhoneValid } from './src/data';
+import { DEFAULT_STATE, SCHEDULE, NOTIFS, PICK_ICONS, EVENT_ICONS, EMPTY_SCHEDULE, mondayIndex, clampDay, setSchedule, toMin, formatPhoneKz, isPhoneValid , subjectKey } from './src/data';
 import { findInstitution } from './src/universities';
 import { aiAnswer, buildAiContext, adminAnswer, buildAdminContext } from './src/ai';
 import {
@@ -140,6 +140,14 @@ function Root() {
   const rerender = useCallback(() => forceRender(x => x + 1), []);
   const [kbOpen, setKbOpen] = useState(false);
   const [photoView, setPhotoView] = useState(null);
+  // Пока открыта галерея, нижние листы (Modal) прячем: iOS не даёт показать
+  // галерею поверх Modal — после выбора фото лист зависал и не закрывался.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const withPicker = async fn => {
+    setPickerOpen(true);
+    await new Promise(r => setTimeout(r, 350)); // дать листу уехать
+    try { return await fn(); } finally { setPickerOpen(false); }
+  };
   useEffect(() => {
     const a = Keyboard.addListener('keyboardWillShow', () => setKbOpen(true));
     const b = Keyboard.addListener('keyboardWillHide', () => setKbOpen(false));
@@ -1072,9 +1080,9 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       try {
         const left = Math.max(0, 5 - (current || []).length);
         if (!left) { showToast('Максимум 5 фото'); return; }
-        const res = await ImagePicker.launchImageLibraryAsync({
+        const res = await withPicker(() => ImagePicker.launchImageLibraryAsync({
           mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true, selectionLimit: left,
-        });
+        }));
         if (res.canceled || !res.assets?.length) return;
         onDone([...(current || []), ...res.assets.map(a => a.uri)].slice(0, 5));
       } catch (e) {
@@ -1198,7 +1206,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
 
   const pickFieldPhoto = async () => {
     try {
-      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+      const res = await withPicker(() => ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 }));
       if (res.canceled || !res.assets?.length) return;
       let uri = res.assets[0].uri;
       try {
@@ -1213,9 +1221,16 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
   };
 
   const saveFieldEdit = () => {
-    const { lessonId, field, value, photos } = fieldEdit;
+    const { lessonId: key, field, value, photos } = fieldEdit;
     const ld = { ...(state.lessonData || {}) };
-    ld[lessonId] = { ...(ld[lessonId] || {}), [field]: value.trim(), [field + '_photos']: photos || [] };
+    // Старые записи хранились по id пары. Переносим их на предмет один раз,
+    // чтобы ничего не потерять, и дальше пишем только по предмету.
+    if (key.startsWith('subj:')) {
+      for (const day of (state.schedule || [])) for (const l of day) {
+        if (subjectKey(l.name) === key && ld[l.id]) { ld[key] = { ...(ld[l.id] || {}), ...(ld[key] || {}) }; delete ld[l.id]; }
+      }
+    }
+    ld[key] = { ...(ld[key] || {}), [field]: value.trim(), [field + '_photos']: photos || [] };
     patch({ lessonData: ld });
     setFieldEdit(null);
     showToast('Сохранено');
@@ -1299,11 +1314,12 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       date: eventDraft.date.trim() || 'Дата уточняется',
       place: eventDraft.place.trim() || 'Место уточняется',
       color: eventDraft.color, icon: eventDraft.icon, custom: true,
+      university: state.setup.university || '',
     };
     patch({ events: [...(state.events || []), newEvent] });
     if (BACKEND_ENABLED) addEventServer(newEvent);
     setEventSheet(false); setEventDraft(null);
-    showToast('Событие добавлено в афишу');
+    showToast(tr('Событие добавлено в афишу университета'));
   };
 
   const saveDraft = () => {
@@ -1856,7 +1872,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       </Modal>
 
       {/* Bottom sheet: ДЗ от старосты на всю группу */}
-      <Modal visible={groupTaskSheet} transparent animationType="slide" onRequestClose={() => setGroupTaskSheet(false)}>
+      <Modal visible={groupTaskSheet && !pickerOpen} transparent animationType="slide" onRequestClose={() => setGroupTaskSheet(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={ss.backdrop} onPress={() => setGroupTaskSheet(false)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
@@ -2125,7 +2141,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       </Modal>
 
       {/* Bottom sheet: материалы / ДЗ / заметки к паре */}
-      <Modal visible={!!fieldEdit} transparent animationType="slide" onRequestClose={() => setFieldEdit(null)}>
+      <Modal visible={!!fieldEdit && !pickerOpen} transparent animationType="slide" onRequestClose={() => photoView ? setPhotoView(null) : setFieldEdit(null)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={ss.backdrop} onPress={() => setFieldEdit(null)} />
           <View style={[ss.sheet, { paddingBottom: kbOpen ? 12 : 24 + insets.bottom }]}>
@@ -2154,10 +2170,17 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
             <PrimaryButton label={tr('Сохранить')} onPress={saveFieldEdit} style={{ marginTop: 12 }} />
           </View>
         </KeyboardAvoidingView>
+        {/* Просмотр фото внутри этого же Modal: второй Modal поверх первого iOS не показывает */}
+        {!!photoView && (
+          <Pressable style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,.94)', alignItems: 'center', justifyContent: 'center' }} onPress={() => setPhotoView(null)}>
+            <Image source={{ uri: photoView }} style={{ width: '94%', height: '80%' }} resizeMode="contain" />
+            <Text style={int(500, 13, { color: 'rgba(255,255,255,.7)', marginTop: 14 })}>{tr('Нажмите, чтобы закрыть')}</Text>
+          </Pressable>
+        )}
       </Modal>
 
       {/* Просмотр фото */}
-      <Modal visible={!!photoView} transparent animationType="fade" onRequestClose={() => setPhotoView(null)}>
+      <Modal visible={!!photoView && !fieldEdit} transparent animationType="fade" onRequestClose={() => setPhotoView(null)}>
         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,.92)', alignItems: 'center', justifyContent: 'center' }} onPress={() => setPhotoView(null)}>
           {photoView && <Image source={{ uri: photoView }} style={{ width: '94%', height: '80%' }} resizeMode="contain" />}
         </Pressable>
