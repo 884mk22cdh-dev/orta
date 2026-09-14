@@ -41,3 +41,6 @@ yarn-error.*
 
 # ── Локальные заметки инструментов ──
 .claude/settings.local.json
+
+# Vercel: локальная привязка папки web к проекту
+web/.vercel/

@@ -47,9 +47,18 @@ import {
 const LESSON_TYPES = ['Лекция', 'Практика', 'Лаба', 'Семинар'];
 const RESEND_DEFAULT = 30; // секунд до кнопки «отправить ещё раз» (сервер пускает через 20)
 
-/* Ссылка-приглашение в группу: она же содержимое QR-кода старосты.
-   В Expo Go это exp://…/--/group/КОД, в собранном приложении — orta://group/КОД. */
-const groupLink = code => Linking.createURL('group/' + String(code || '').toUpperCase());
+/* Ссылки наружу: в группу (она же содержимое QR старосты) и «пригласи друга».
+   В собранном приложении это https://orta-app.vercel.app/g/КОД и /i/ID — такую
+   ссылку мессенджеры делают кликабельной, iOS открывает ORTA сразу (universal
+   link), а у кого приложения нет — страница ведёт в App Store. Раньше здесь
+   было orta://…, и без приложения ссылка не вела никуда.
+   В Expo Go universal links не работают, там остаётся exp://…/--/group/КОД. */
+const WEB_URL = 'https://orta-app.vercel.app';
+const IN_EXPO_GO = Linking.createURL('/').startsWith('exp');
+const groupLink = code => (IN_EXPO_GO
+  ? Linking.createURL('group/' + String(code || '').toUpperCase())
+  : WEB_URL + '/g/' + String(code || '').toUpperCase());
+const inviteLink = id => (IN_EXPO_GO ? Linking.createURL('invite/' + id) : WEB_URL + '/i/' + id);
 
 /* Разбор отсканированного QR: это может быть группа или отметка на паре.
    Код пары — 8 знаков, код группы — 6, поэтому голый код различаем по длине. */
@@ -58,7 +67,7 @@ function parseQr(raw) {
   if (!s) return null;
   const mk = s.match(/mark\/([A-Za-z0-9]{6,12})/);
   if (mk) return { kind: 'mark', code: mk[1].toUpperCase() };
-  const gr = s.match(/group\/([A-Za-z0-9]{4,12})/);
+  const gr = s.match(/(?:group|\/g)\/([A-Za-z0-9]{4,12})/);
   if (gr) return { kind: 'group', code: gr[1].toUpperCase() };
   if (/^[A-Za-z0-9]{8}$/.test(s)) return { kind: 'mark', code: s.toUpperCase() };
   if (/^[A-Za-z0-9]{4,12}$/.test(s)) return { kind: 'group', code: s.toUpperCase() };
@@ -305,7 +314,8 @@ function Root() {
     return () => { clearTimeout(groupRefetchTimer.current); supabase.removeChannel(ch); };
   }, [cloudReady, state?.group?.code]);
 
-  // Входящие ссылки: orta://group/КОД и orta://profile/ID (в Expo Go — exp://…/--/…)
+  // Входящие ссылки: https://orta-app.vercel.app/g/КОД и /i/ID (universal links),
+  // старые orta://group/КОД и orta://invite/ID, в Expo Go — exp://…/--/…
   const actionsRef = useRef(null);
   const routeRef = useRef(null);
   const handleUrl = useCallback(async url => {
@@ -313,7 +323,7 @@ function Root() {
     try {
       const parsed = Linking.parse(url);
       const parts = String(parsed.path || '').split('/').filter(Boolean);
-      if (parts[0] === 'group' && parts[1]) {
+      if ((parts[0] === 'group' || parts[0] === 'g') && parts[1]) {
         const code = parts[1].toUpperCase();
         Alert.alert(t('inviteTitle'), `${t('joinThisGroup')}?`, [
           { text: t('cancel'), style: 'cancel' },
@@ -324,7 +334,7 @@ function Root() {
         showToast(r?.ok ? `${t('scanTeacher')}: ${r.subject || ''}`
           : r?.error === 'expired' ? t('scanExpired') : t('groupScanBad'));
         if (r?.ok) setRoute({ name: 'attendance' });
-      } else if ((parts[0] === 'profile' || parts[0] === 'invite') && parts[1]) {
+      } else if ((parts[0] === 'profile' || parts[0] === 'invite' || parts[0] === 'i') && parts[1]) {
         const inviter = parts[1];
         const r = await coinsClaimReferral(inviter);
         if (r?.ok) {
@@ -1005,7 +1015,7 @@ function Root() {
     },
     shareProfile: () => {
       const p = state.profile, su = state.setup;
-      const link = uidRef.current ? '\n' + Linking.createURL('invite/' + uidRef.current) : '';
+      const link = uidRef.current ? '\n' + inviteLink(uidRef.current) : '';
       Share.share({
         message: `${p.firstName} ${p.lastName} — ${su.university}${su.faculty ? ', ' + su.faculty : ''}, ${su.course} курс.\nПрисоединяйся к ORTA 🎓 Нам обоим дадут по 100 O-COIN 🪙${link}`,
       }).catch(() => {});

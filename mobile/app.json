@@ -18,7 +18,10 @@
           "group.kz.orta.app"
         ]
       },
-      "appleTeamId": "8DK963QWDZ"
+      "appleTeamId": "8DK963QWDZ",
+      "associatedDomains": [
+        "applinks:orta-app.vercel.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORTA</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         background: #5324B0; color: #fff; font: 16px/1.5 -apple-system, "Inter", system-ui, sans-serif; padding: 24px; box-sizing: border-box; text-align: center; }
+  .card { max-width: 380px; width: 100%; }
+  .logo { font-size: 44px; font-weight: 800; letter-spacing: 6px; margin-bottom: 6px; }
+  h1 { font-size: 20px; margin: 16px 0 8px; }
+  p { margin: 0 0 12px; opacity: .9; }
+  .btn { display: block; box-sizing: border-box; width: 100%; padding: 15px 18px; margin-top: 12px; border-radius: 16px; font-weight: 700; text-decoration: none; }
+  .primary { background: #fff; color: #5324B0; }
+  .ghost { background: rgba(255,255,255,.14); color: #fff; }
+  .hint { font-size: 13px; opacity: .75; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">ORTA</div>
+  <h1 id="title">Открываем ORTA…</h1>
+  <p id="text">Если приложение не открылось само, нажмите кнопку.</p>
+  <a class="btn primary" id="open" href="#">Открыть в ORTA</a>
+  <a class="btn ghost" id="store" href="https://apps.apple.com/kz/app/id6807105507">Установить из App Store</a>
+  <p class="hint" id="hint"></p>
+</div>
+<script>
+(function () {
+  var parts = location.pathname.split('/').filter(Boolean);
+  var kind = parts[0], code = (parts[1] || '').trim();
+  var deep = null, title = 'Открываем ORTA…', hint = '';
+  if (kind === 'i' && code) {
+    deep = 'orta://invite/' + encodeURIComponent(code);
+    title = 'Вас пригласили в ORTA 🎓';
+    hint = 'Нет приложения? Установите его из App Store, зарегистрируйтесь, а потом откройте эту ссылку ещё раз — вам и другу начислят по 100 O‑COIN.';
+  } else if (kind === 'g' && code) {
+    deep = 'orta://group/' + encodeURIComponent(code.toUpperCase());
+    title = 'Приглашение в группу ' + code.toUpperCase();
+    hint = 'Нет приложения? Установите его из App Store, а потом откройте эту ссылку ещё раз, чтобы вступить в группу.';
+  }
+  document.getElementById('title').textContent = title;
+  document.getElementById('hint').textContent = hint;
+  var open = document.getElementById('open');
+  if (!deep) { open.style.display = 'none'; document.getElementById('text').textContent = 'Ссылка неполная. Попросите друга отправить её ещё раз.'; return; }
+  open.href = deep;
+  // iOS: если ORTA установлена, система откроет её сама по universal link ещё до этой страницы.
+  // Сюда попадают те, у кого приложения нет, или Android/десктоп — пробуем схему и ждём.
+  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isIOS) {
+    var t = setTimeout(function () { location.href = 'https://apps.apple.com/kz/app/id6807105507'; }, 1800);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) clearTimeout(t); });
+    location.href = deep;
+  }
+})();
+</script>
+</body>
+</html>
