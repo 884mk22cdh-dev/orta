@@ -1314,6 +1314,8 @@ export function AfishaScreen({ events, isAdmin, topInset, actions }) {
         <IconBtn icon="plus" onPress={actions.openEventSheet} />
       </View>
       <Text style={int(400, 15, { color: C.muted, marginTop: 6 })}>{t('afishaSub')}</Text>
+      {/* Правило App Store 1.2: пользовательский контент — правила и жалоба на виду */}
+      <Text style={int(400, 12, { color: C.muted, marginTop: 8, lineHeight: 17 })}>{tr('Событие видит весь ваш университет. Без рекламы и оскорблений. Нарушает правила — откройте событие и нажмите «Пожаловаться».')}</Text>
       <View style={{ gap: 16, marginTop: 18 }}>
         {events.map(e => {
           const cover = (e.photos || [])[0];
@@ -3298,6 +3300,11 @@ export function EventScreen({ event, topInset, actions }) {
 
         <PrimaryButton label={tr('Поделиться событием')} style={{ marginTop: 26 }}
           onPress={() => actions.shareEvent(event)} />
+        {!event.custom && !event.official ? (
+          <Pressable onPress={() => actions.reportEvent(event)} hitSlop={8} style={{ alignSelf: 'center', marginTop: 16, paddingVertical: 6 }}>
+            <Text style={int(600, 14, { color: C.red })}>{tr('Пожаловаться')}</Text>
+          </Pressable>
+        ) : null}
       </View>
     </ScrollView>
   );

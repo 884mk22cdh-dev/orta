@@ -44,6 +44,8 @@ export const DEFAULT_STATE = {
   group: null,
   coins: 50,
   blocked: [],
+  hiddenEvents: [],        // id событий, на которые пожаловались — скрыты у этого пользователя
+  blockedEventAuthors: [], // авторы событий, которых пользователь скрыл
   exams: [
     { id: 'x1', subject: 'Математика', date: '12 января', time: '09:00', room: '214', color: C.purple },
     { id: 'x2', subject: 'Физика', date: '16 января', time: '11:00', room: '312', color: C.yellow },

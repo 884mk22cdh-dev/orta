@@ -172,7 +172,7 @@ export async function fetchEvents() {
   return data.map(r => ({
     id: r.id, title: r.title, date: r.date_text, place: r.place,
     color: r.color, icon: r.icon, custom: r.user_id === user.id,
-    university: r.university || '', official: r.user_id === null,
+    university: r.university || '', official: r.user_id === null, authorId: r.user_id || null,
     photos: Array.isArray(r.photos) ? r.photos : [],
     description: r.description || '',
   }));

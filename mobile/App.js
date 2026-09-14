@@ -8,7 +8,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } f
 
 import { ErrorBoundary, setCrashScreen } from './src/crash';
 import { onNetChange, isOnline, probe } from './src/net';
-import { checkPost } from './src/moderation';
+import { checkPost, hasProfanity } from './src/moderation';
 import { C, man, int, sh, cardShadow, applyTheme, onThemeChange, themeMode } from './src/theme';
 import { setLang, t } from './src/i18n';
 import { tr } from './src/tr';
@@ -662,6 +662,30 @@ function Root() {
         },
       ]);
     },
+    reportEvent: ev => {
+      Alert.alert(ev.title, tr('Что сделать?'), [
+        { text: tr('Отмена'), style: 'cancel' },
+        {
+          text: tr('Пожаловаться'), style: 'destructive',
+          onPress: () => {
+            patch({ hiddenEvents: [...(state.hiddenEvents || []), ev.id] });
+            Linking.openURL('mailto:oscaraltyn@gmail.com?subject=' + encodeURIComponent('Жалоба на событие в ORTA') +
+              '&body=' + encodeURIComponent('Событие: ' + ev.title + '\nДата: ' + ev.date + '\nМесто: ' + ev.place + '\nID: ' + ev.id + '\nАвтор: ' + (ev.authorId || '—'))).catch(() => {});
+            showToast(tr('Жалоба отправлена, событие скрыто'));
+            setRoute({ name: 'afisha' });
+          },
+        },
+        {
+          text: tr('Скрыть автора'),
+          onPress: () => {
+            if (ev.authorId) patch({ blockedEventAuthors: [...(state.blockedEventAuthors || []), ev.authorId] });
+            else patch({ hiddenEvents: [...(state.hiddenEvents || []), ev.id] });
+            showToast(tr('События этого автора скрыты'));
+            setRoute({ name: 'afisha' });
+          },
+        },
+      ]);
+    },
     reportPost: p => {
       Alert.alert(tr('Сообщение от ') + p.author, 'Что сделать?', [
         { text: tr('Отмена'), style: 'cancel' },
@@ -1308,6 +1332,8 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
 
   const saveEvent = () => {
     if (!eventDraft.title.trim()) { showToast('Введите название события'); return; }
+    // Правило App Store 1.2: событие видит весь вуз, значит фильтр как в чате
+    if (hasProfanity(eventDraft.title) || hasProfanity(eventDraft.place)) { showToast(t('modProfanity')); return; }
     const newEvent = {
       id: 'ev-' + Date.now(),
       title: eventDraft.title.trim(),
@@ -1662,7 +1688,9 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
   else if (route.name === 'home') screen = state?.isAdmin
     ? <AdminScreen isAdmin asHome deviceId={uidRef.current} data={adminData} crashes={crashes} busy={adminBusy} topInset={top} actions={actions} />
     : <HomeScreen state={state} selectedDay={selectedDay} topInset={top} actions={actions} />;
-  else if (route.name === 'afisha') screen = <AfishaScreen events={state.events || []} isAdmin={!!state?.isAdmin} topInset={top} actions={actions} />;
+  else if (route.name === 'afisha') screen = <AfishaScreen
+    events={(state.events || []).filter(e => !(state.hiddenEvents || []).includes(e.id) && !(e.authorId && (state.blockedEventAuthors || []).includes(e.authorId)))}
+    isAdmin={!!state?.isAdmin} topInset={top} actions={actions} />;
   else if (route.name === 'ai') screen = <AiScreen messages={aiMessages} thinking={aiThinking} onSend={onAiSend} isAdmin={!!state?.isAdmin} topInset={top} bottomInset={insets.bottom} />;
   else if (route.name === 'lesson') screen = <LessonScreen id={route.id} group={state.setup.group || '—'} lessonData={state.lessonData} topInset={top} actions={actions} />;
   else if (route.name === 'teacher') screen = <TeacherScreen state={state} busy={busyGroup} topInset={top} actions={actions} />;
