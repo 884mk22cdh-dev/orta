@@ -27,12 +27,21 @@ def build(name, color, kk, ru, W, H):
     m = int(W*0.045)
     top = int(H*0.10)
     d.rounded_rectangle([m, top, W-m, H-m], radius=int(W*0.075), fill=color)
-    fkk = ImageFont.truetype(FONT, int(W*0.085)); fru = ImageFont.truetype(FONT2, int(W*0.046))
+    # Текст не должен упираться в края карточки: ужимаем шрифт, пока самая
+    # длинная строка не влезет в ширину карточки минус отступы.
+    limit = W - 2*m - 2*int(W*0.06)
+    def fit(path, size, lines):
+        f = ImageFont.truetype(path, size)
+        while size > 20 and max(d.textlength(l, font=f) for l in lines) > limit:
+            size -= 2; f = ImageFont.truetype(path, size)
+        return f, size
+    fkk, skk = fit(FONT, int(W*0.085), kk.split('\n'))
+    fru, sru = fit(FONT2, int(W*0.046), [ru])
     y = top + int(H*0.035)
     for line in kk.split('\n'):
-        w = d.textlength(line, font=fkk); d.text(((W-w)/2, y), line, font=fkk, fill='white'); y += int(W*0.10)
+        w = d.textlength(line, font=fkk); d.text(((W-w)/2, y), line, font=fkk, fill='white'); y += int(skk*1.18)
     y += int(W*0.015)
-    w = d.textlength(ru, font=fru); d.text(((W-w)/2, y), ru, font=fru, fill=(255,255,255,235)); y += int(W*0.075)
+    w = d.textlength(ru, font=fru); d.text(((W-w)/2, y), ru, font=fru, fill=(255,255,255,235)); y += int(sru*1.6)
     # телефон
     shot = Image.open(f'{SRC}/{name}.png').convert('RGB')
     pw = int(W*0.74); ph = int(pw*shot.height/shot.width)
