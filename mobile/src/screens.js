@@ -535,10 +535,10 @@ export function SetupScreen({ step, setup, person, onPerson, onPick, onNext, onB
       <ScrollView style={{ flex: 1, marginTop: 20 }} contentContainerStyle={{ gap: 4 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Text style={s.formLabel}>{tr('Имя')}</Text>
         <TextInput style={[s.formInput, cardShadow, int(500, 15)]}
-          placeholder={teacher ? 'Айгүль' : 'Оскар'} placeholderTextColor={C.dot}
+          placeholder={teacher ? 'Айгүль' : 'Илон'} placeholderTextColor={C.dot}
           value={person.firstName} onChangeText={v => onPerson('firstName', v)} />
         <Text style={s.formLabel}>{tr('Фамилия')}</Text>
-        <TextInput style={[s.formInput, cardShadow, int(500, 15)]} placeholder={tr('Жанболат')} placeholderTextColor={C.dot}
+        <TextInput style={[s.formInput, cardShadow, int(500, 15)]} placeholder={tr('Маск')} placeholderTextColor={C.dot}
           value={person.lastName} onChangeText={v => onPerson('lastName', v)} />
         <Text style={s.formLabel}>{tr('Номер телефона')}</Text>
         <TextInput style={[s.formInput, cardShadow, int(500, 15)]} placeholder="+7 700 700 70 70" placeholderTextColor={C.dot}

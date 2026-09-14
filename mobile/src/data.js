@@ -4,7 +4,7 @@ import { now as tzNow, nowMinutes, today as tzToday } from './time';
 export const DEFAULT_STATE = {
   onboarded: false,
   setup: { city: 'Алматы', university: 'КазНУ им. аль-Фараби', faculty: 'Информационных технологий', course: 2, group: '', eduKind: 'uni', role: 'student' },
-  profile: { firstName: 'Оскар', lastName: 'Жанболат', initials: 'ОЖ', phone: '', email: '' },
+  profile: { firstName: 'Илон', lastName: 'Маск', initials: 'ИМ', phone: '', email: '' },
   chips: 'subjects',
   showAllSubjects: false,
   bookmarks: [],
