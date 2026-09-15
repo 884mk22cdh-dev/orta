@@ -29,7 +29,7 @@ import {
   FAILED, sendEmailCode, verifyEmailCode, attachEmail, verifyAttachedEmail, setPassword, signInPassword, myEmail, fetchMyProfile,
 } from './src/backend';
 import * as Notifications from 'expo-notifications';
-import { rescheduleLessonReminders, registerPushToken, ATTEND_PRESENT, ATTEND_ABSENT } from './src/notifications';
+import { rescheduleLessonReminders, registerPushToken, askNotificationPermission, notificationPermissionStatus, ATTEND_PRESENT, ATTEND_ABSENT } from './src/notifications';
 import * as ATT from './src/attendance';
 import { now as tzNow } from './src/time';
 import { updateWidget } from './src/widget';
@@ -402,8 +402,36 @@ function Root() {
     const sched = state.schedule || DEFAULT_STATE.schedule;
     updateWidget(sched);
     if (!state.onboarded) return;
-    rescheduleLessonReminders(sched, state.remindBefore, state.attendAsk !== false);
+    rescheduleLessonReminders(sched, state.remindBefore, state.attendAsk === true);
   }, [state?.onboarded, state?.schedule, state?.remindBefore, state?.attendAsk]);
+
+  // Экран «Включить напоминания?» перед системным запросом. iOS даёт показать
+  // системное окно один раз, и на голом запросе большинство жмёт «Не разрешать».
+  // Поэтому сначала объясняем, зачем, и системное окно видят только те, кто
+  // нажал «Включить». Отказавшимся напоминаем через неделю.
+  const [notifSheet, setNotifSheet] = useState(false);
+  useEffect(() => {
+    if (!state?.onboarded || route.name !== 'home') return;
+    let alive = true;
+    (async () => {
+      const status = await notificationPermissionStatus();
+      const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+      if (alive && status === 'undetermined' && (state.notifAskedAt || 0) < weekAgo) {
+        setTimeout(() => alive && setNotifSheet(true), 1500);
+      }
+    })();
+    return () => { alive = false; };
+  }, [state?.onboarded, route.name]);
+  const enableNotifications = async () => {
+    setNotifSheet(false);
+    patch({ notifAskedAt: Date.now() });
+    const ok = await askNotificationPermission();
+    if (ok) {
+      rescheduleLessonReminders(state.schedule || DEFAULT_STATE.schedule, state.remindBefore, state.attendAsk === true);
+      try { const tok = await registerPushToken(Constants?.expoConfig?.extra?.eas?.projectId); if (tok) savePushToken(tok); } catch (e) {}
+      showToast(tr('Напоминания включены 🔔'));
+    }
+  };
 
   // Ответ на уведомление о посещаемости: кнопки «Пришёл» / «Не был» прямо в шторке
   useEffect(() => {
@@ -490,7 +518,7 @@ function Root() {
       patch({ remindBefore: opts[(opts.indexOf(state.remindBefore) + 1) % opts.length] });
     },
     toggleChanges: () => patch({ notifChangesOn: !state.notifChangesOn }),
-    toggleAttendAsk: () => patch({ attendAsk: state.attendAsk === false }),
+    toggleAttendAsk: () => patch({ attendAsk: !state.attendAsk }),
     openPassSheet: () => { setPassDraft(''); setPassSheet(true); },
     savePassword: async () => {
       if (passDraft.length < 6) { showToast('Пароль минимум 6 символов'); return; }
@@ -1926,6 +1954,29 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
             <PrimaryButton label={loginBusy ? '…' : t('save')} onPress={() => !loginBusy && actions.savePassword()} style={{ marginTop: 16 }} />
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Bottom sheet: объяснение перед системным запросом уведомлений */}
+      <Modal visible={notifSheet} transparent animationType="slide" onRequestClose={() => { setNotifSheet(false); patch({ notifAskedAt: Date.now() }); }}>
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={ss.backdrop} onPress={() => { setNotifSheet(false); patch({ notifAskedAt: Date.now() }); }} />
+          <View style={[ss.sheet, { paddingBottom: 24 + insets.bottom }]}>
+            <View style={ss.grab} />
+            <View style={{ alignItems: 'center', marginTop: 6 }}>
+              <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="bell" size={34} color="#fff" />
+              </View>
+            </View>
+            <Text style={man(800, 22, { textAlign: 'center', marginTop: 16 })}>{tr('Не пропускай пары')}</Text>
+            <Text style={int(400, 15, { color: C.muted, textAlign: 'center', marginTop: 10, lineHeight: 22 })}>
+              {tr('ORTA напомнит за 15 минут до пары, пришлёт сводку на завтра и предупредит, если староста поменял расписание.')}
+            </Text>
+            <PrimaryButton label={tr('Включить напоминания')} onPress={enableNotifications} style={{ marginTop: 22 }} />
+            <Pressable onPress={() => { setNotifSheet(false); patch({ notifAskedAt: Date.now() }); }} hitSlop={8} style={{ alignSelf: 'center', marginTop: 14, paddingVertical: 6 }}>
+              <Text style={int(600, 14, { color: C.muted })}>{tr('Позже')}</Text>
+            </Pressable>
+          </View>
+        </View>
       </Modal>
 
       {/* Bottom sheet: ДЗ от старосты на всю группу */}

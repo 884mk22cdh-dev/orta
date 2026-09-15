@@ -1152,7 +1152,7 @@ export function SettingsScreen({ state, topInset, actions }) {
             <Text style={int(500, 15)}>{t('attendanceAsk')}</Text>
             <Text style={int(400, 12, { color: C.muted, marginTop: 2 })}>{t('attendanceAskSub')}</Text>
           </View>
-          <Switch on={state.attendAsk !== false} onPress={actions.toggleAttendAsk} />
+          <Switch on={state.attendAsk === true} onPress={actions.toggleAttendAsk} />
         </View>
       </View>
 

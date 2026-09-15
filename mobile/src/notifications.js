@@ -31,11 +31,25 @@ async function ensureAttendCategory() {
   } catch (e) {}
 }
 
+/* Системный запрос разрешения. iOS показывает его один раз в жизни приложения,
+   поэтому вызываем только с нашего экрана-объяснения, когда человек нажал «Включить». */
+export async function askNotificationPermission() {
+  try {
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+  } catch (e) { return false; }
+}
+
+export async function notificationPermissionStatus() {
+  try { return (await Notifications.getPermissionsAsync()).status; } catch (e) { return 'undetermined'; }
+}
+
 export async function rescheduleLessonReminders(schedule, minutesBefore, askAttendance = true) {
   if (scheduling) return;
   scheduling = true;
   try {
-    const { status } = await Notifications.requestPermissionsAsync();
+    // Не спрашиваем разрешение здесь: только смотрим, дали ли его
+    const { status } = await Notifications.getPermissionsAsync();
     await Notifications.cancelAllScheduledNotificationsAsync();
     if (status !== 'granted') return;
     await ensureAttendCategory();
@@ -113,7 +127,7 @@ export async function rescheduleLessonReminders(schedule, minutesBefore, askAtte
 /* Токен устройства для пуш-уведомлений (нужен в TestFlight/App Store) */
 export async function registerPushToken(projectId) {
   try {
-    const { status } = await Notifications.requestPermissionsAsync();
+    const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return null;
     const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
     return res?.data || null;
