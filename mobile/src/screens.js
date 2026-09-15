@@ -3491,3 +3491,20 @@ const makeS = () => StyleSheet.create({
 
 let s = makeS();
 onThemeChange(() => { s = makeS(); });
+
+/* ============ Обязательное обновление ============ */
+export function UpdateScreen({ current, latest, message, storeUrl, topInset, onOpen }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingTop: topInset }}>
+      <View style={{ width: 96, height: 96, borderRadius: 28, backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+        <Icon name="refresh-cw" size={44} color="#fff" />
+      </View>
+      <Text style={man(800, 26, { textAlign: 'center' })}>{tr('Обновите ORTA')}</Text>
+      <Text style={int(400, 15, { color: C.muted, textAlign: 'center', marginTop: 12, lineHeight: 22 })}>
+        {message || tr('Вышла новая версия. Чтобы расписание, группа и афиша работали правильно, обновите приложение.')}
+      </Text>
+      <Text style={int(500, 13, { color: C.dot, marginTop: 14 })}>{tr('У вас')} {current} · {tr('доступна')} {latest}</Text>
+      <PrimaryButton label={tr('Обновить в App Store')} style={{ marginTop: 28, alignSelf: 'stretch' }} onPress={onOpen} />
+    </View>
+  );
+}

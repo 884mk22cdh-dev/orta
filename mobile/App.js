@@ -21,7 +21,7 @@ import {
   fetchForum, sendForumPost, deleteForumPostServer, renameGroup, setGroupCourse,
   fetchGroupTasks, addGroupTask, deleteGroupTask as deleteGroupTaskServer,
   becomeTeacher, myRole, openAttendSession, markByCode, sessionRoster, mySessions, teacherStats, myStudents, studentCard, gradeStudent, teacherReport, excludeStudent, includeStudent, excludedStudents, deleteGrade, deleteSession, setMark as setMarkServer, giveGrade, myGrades, myTeacherMarks,
-  fetchEvents, addEventServer, deleteEventServer,
+  fetchEvents, addEventServer, deleteEventServer, fetchAppConfig,
   createGroup, joinGroup, myGroup, leaveGroupServer, getGroupSchedule, getPublicProfile, askAI,
   crashList, deleteMyAccount, adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
   coinsState, coinsClaimDaily, coinsClaimTask, coinsClaimReferral, coinsClaimOwnerBonus,
@@ -41,7 +41,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import {
   WelcomeScreen, SetupScreen, HomeScreen, LessonScreen, AfishaScreen, AiScreen,
   NotificationsScreen, ProfileScreen, SettingsScreen, SearchScreen, LoadingScreen, CoinsScreen, PrivacyScreen, IntroSplash,
-  FavoritesScreen, MyPostsScreen, MyNotesScreen, CalendarScreen, TasksScreen, StartScreen, GroupScreen, GroupScanScreen, TeacherScreen, TeacherProfileScreen, TeacherStudentsScreen, TeacherStudentScreen, TeacherReportsScreen, SessionScreen, GradesScreen, AttendanceScreen, PublicProfileScreen, AdminScreen, LoginScreen, AdminStudentScreen, EventScreen,
+  FavoritesScreen, MyPostsScreen, MyNotesScreen, CalendarScreen, TasksScreen, StartScreen, GroupScreen, GroupScanScreen, TeacherScreen, TeacherProfileScreen, TeacherStudentsScreen, TeacherStudentScreen, TeacherReportsScreen, SessionScreen, GradesScreen, AttendanceScreen, PublicProfileScreen, AdminScreen, LoginScreen, AdminStudentScreen, EventScreen, UpdateScreen,
 } from './src/screens';
 
 const LESSON_TYPES = ['Лекция', 'Практика', 'Лаба', 'Семинар'];
@@ -62,6 +62,16 @@ const inviteLink = id => (IN_EXPO_GO ? Linking.createURL('invite/' + id) : WEB_U
 
 /* Разбор отсканированного QR: это может быть группа или отметка на паре.
    Код пары — 8 знаков, код группы — 6, поэтому голый код различаем по длине. */
+/* «2.0.1» < «2.1.0»: сравнение по числам, а не по строкам */
+function compareVersions(a, b) {
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+
 function parseQr(raw) {
   const s = String(raw || '').trim();
   if (!s) return null;
@@ -140,6 +150,17 @@ function Root() {
   const rerender = useCallback(() => forceRender(x => x + 1), []);
   const [kbOpen, setKbOpen] = useState(false);
   const [photoView, setPhotoView] = useState(null);
+  // Обязательное обновление: null — проверка не сделана или версия подходит
+  const [updateGate, setUpdateGate] = useState(null);
+  const checkAppVersion = useCallback(async () => {
+    if (!BACKEND_ENABLED) return;
+    const cfg = await fetchAppConfig();
+    if (!cfg || !cfg.minVersion) return;
+    const current = Constants.expoConfig?.version || '0.0.0';
+    if (compareVersions(current, cfg.minVersion) < 0) setUpdateGate({ ...cfg, current });
+    else setUpdateGate(null);
+  }, []);
+  useEffect(() => { checkAppVersion(); }, [checkAppVersion]);
   // Пока открыта галерея, нижние листы (Modal) прячем: iOS не даёт показать
   // галерею поверх Modal — после выбора фото лист зависал и не закрывался.
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -361,15 +382,17 @@ function Root() {
     return () => sub.remove();
   }, [handleUrl]);
 
-  // Виджет: обновляем при возврате в приложение
+  // Виджет: обновляем при возврате в приложение. Заодно перепроверяем версию:
+  // человек мог обновиться в App Store и вернуться, экран обновления должен уйти.
   useEffect(() => {
     const sub = AppState.addEventListener('change', st => {
       if (st === 'active' && stateRef.current) {
         updateWidget(stateRef.current?.schedule || DEFAULT_STATE.schedule);
+        checkAppVersion();
       }
     });
     return () => sub.remove();
-  }, []);
+  }, [checkAppVersion]);
 
   // Напоминания о парах: пересобираем при смене расписания, интервала или опроса о посещаемости.
   // Разрешение на уведомления просим ТОЛЬКО после регистрации — на экране приветствия
@@ -1665,7 +1688,9 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
   const scanScreen = route.name === 'groupScan';
   const barStyle = intro || lessonScreen || scanScreen ? 'light' : (themeMode === 'dark' ? 'light' : 'dark');
 
-  if (!state || route.name === 'loading') screen = <LoadingScreen topInset={top} />;
+  if (updateGate) screen = <UpdateScreen current={updateGate.current} latest={updateGate.latestVersion || updateGate.minVersion} message={updateGate.message}
+    storeUrl={updateGate.storeUrl} topInset={top} onOpen={() => Linking.openURL(updateGate.storeUrl || 'https://apps.apple.com/kz/app/id6807105507').catch(() => {})} />;
+  else if (!state || route.name === 'loading') screen = <LoadingScreen topInset={top} />;
   else if (route.name === 'onboarding') {
     screen = setupStep === 0
       ? <WelcomeScreen onNext={onSetupNext}

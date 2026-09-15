@@ -813,3 +813,14 @@ export async function deleteMyAccount() {
   if (data?.ok) await supabase.auth.signOut().catch(() => {});
   return data;
 }
+
+/* ---------- Минимальная версия приложения ----------
+   Таблица app_config читается без входа. Если версия на телефоне ниже
+   min_version — приложение показывает экран «Обновите ORTA» и дальше не пускает. */
+export async function fetchAppConfig() {
+  try {
+    const { data, error } = await supabase.from('app_config').select('*').eq('id', 'ios').maybeSingle();
+    if (error || !data) return null;
+    return { minVersion: data.min_version || '', latestVersion: data.latest_version || '', storeUrl: data.store_url || '', message: data.message || '' };
+  } catch (e) { return null; }
+}
