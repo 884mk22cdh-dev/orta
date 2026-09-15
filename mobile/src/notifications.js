@@ -7,7 +7,7 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,   // со звуком: беззвучный баннер студенты просто не замечали
     shouldSetBadge: false,
   }),
 });
@@ -62,6 +62,7 @@ export async function rescheduleLessonReminders(schedule, minutesBefore, askAtte
           content: {
             title: 'ORTA',
             body: `Через ${mins} минут ${l.name}${l.room && l.room !== '—' ? ', ауд. ' + l.room : ''}`,
+            sound: 'default',
           },
           trigger: weekly(day + 2, Math.floor(total / 60), total % 60), // 1=Вс, 2=Пн … 7=Сб
         });
@@ -77,6 +78,7 @@ export async function rescheduleLessonReminders(schedule, minutesBefore, askAtte
             content: {
               title: `${l.name} · ${l.start}`,
               body: 'Ты на паре? Отметься — попадёт в твой журнал посещаемости',
+              sound: 'default',
               categoryIdentifier: ATTEND_CATEGORY,
               data: { kind: 'attendance', lessonId: l.id, lessonName: l.name, day },
             },
@@ -90,14 +92,14 @@ export async function rescheduleLessonReminders(schedule, minutesBefore, askAtte
 
       // Утренняя сводка в 7:30 в день пар
       await Notifications.scheduleNotificationAsync({
-        content: { title: 'ORTA · сегодня', body: `${count}, первая в ${lessons[0].start} — ${lessons[0].name}` },
+        content: { title: 'ORTA · сегодня', body: `${count}, первая в ${lessons[0].start} — ${lessons[0].name}`, sound: 'default' },
         trigger: weekly(day + 2, 7, 30),
       });
 
       // Вечерняя сводка накануне в 20:30 (Пн → уведомление в Вс и т.д.)
       const eveWeekday = day + 1 === 1 ? 8 : day + 1; // день перед day: iOS weekday = day+2-1
       await Notifications.scheduleNotificationAsync({
-        content: { title: 'ORTA · завтра', body: `${count}, первая в ${lessons[0].start}. Не забудь собраться 🎒` },
+        content: { title: 'ORTA · завтра', body: `${count}, первая в ${lessons[0].start}. Не забудь собраться 🎒`, sound: 'default' },
         trigger: weekly(eveWeekday > 7 ? 1 : eveWeekday, 20, 30),
       });
     }
