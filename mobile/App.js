@@ -1499,7 +1499,11 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
     setLoginBusy(false);
     setLoginSent(null);
 
-    if (prof) {
+    if (prof || isAdm) {
+      // Админ входит по почте и сразу попадает в админку: анкета студента ему не нужна
+      if (!prof && isAdm) {
+        patch({ onboarded: true, isAdmin: true, profile: { firstName: 'Админ', lastName: 'ORTA', initials: 'A', phone: '', email: mail } });
+      }
       setRoute({ name: 'home' });
       showToast(isAdm ? 'С возвращением, админ! 👑' : t('loginWelcome'));
     } else {
