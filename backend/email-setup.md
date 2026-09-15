@@ -1,5 +1,13 @@
 # Письма ORTA: код входа от «ORTA TEAM»
 
+## Статус на 15 сентября 2026
+
+Письма уходят через Brevo с адреса **noreply@qnewsai.com** (имя отправителя «ORTA TEAM»).
+Домен qnewsai.com подтверждён в Brevo: в Cloudflare добавлены TXT brevo-code,
+CNAME brevo1._domainkey и brevo2._domainkey, TXT _dmarc. До этого отправителем был
+Gmail-адрес без подписей, и mail.ru придерживал письма на 5–10 минут.
+Отправитель меняется в Supabase: Management API → config/auth → smtp_admin_email.
+
 Проект: https://supabase.com/dashboard/project/zqjbvrfpuusemdsurskc
 
 ## Статус на 2 сентября 2026
