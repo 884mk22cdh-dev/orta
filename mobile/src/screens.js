@@ -3164,7 +3164,18 @@ export function AdminScreen({ isAdmin, deviceId, data, crashes, busy, asHome, to
         ))}
       </View>
 
-      {/* Последние студенты */}
+      {/* Студенты: полный список с почтой на отдельном экране */}
+      <Text style={s.sectionLabel}>{tr('Студенты')}</Text>
+      <Pressable onPress={actions.adminOpenStudents} style={[s.settingsCard, cardShadow, { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, marginBottom: 12 }]}>
+        <View style={{ width: 40, height: 40, borderRadius: 14, backgroundColor: hexRgba(C.purple, 0.14), alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="users" size={20} color={C.purple} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={int(600, 15)}>{tr('Все студенты')}</Text>
+          <Text style={int(400, 12, { color: C.muted })}>{tr('Почта, телефон, вуз, активность, поиск')}</Text>
+        </View>
+        <Icon name="chevron-right" size={16} color={C.dot} />
+      </Pressable>
       <Text style={s.sectionLabel}>{tr('Последние студенты')}</Text>
       <View style={[s.settingsCard, cardShadow]}>
         {(data?.profiles || []).map((p, i) => (
@@ -3220,12 +3231,31 @@ export function AdminStudentScreen({ data, topInset, actions }) {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: topInset + 8, paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <IconBtn icon="chevron-left" onPress={() => actions.nav('home')} />
+        <IconBtn icon="chevron-left" onPress={() => actions.nav(p.email ? 'adminStudents' : 'home')} />
         <View style={{ flex: 1 }}>
           <Text style={man(800, 22)} numberOfLines={1}>{p.first_name} {p.last_name}</Text>
           <Text style={int(400, 13, { color: C.muted })} numberOfLines={1}>{p.university}{p.group_name ? ' · ' + p.group_name : ''} · {p.course} курс</Text>
         </View>
       </View>
+      {p.email ? (
+        <View style={[s.settingsCard, cardShadow, { marginTop: 16 }]}>
+          <Pressable onPress={() => actions.adminMail(p.email)} onLongPress={() => actions.adminCopy(p.email)} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border }}>
+            <Text style={int(400, 12, { color: C.muted })}>{tr('Почта')} · {tr('тап — написать, долгое — скопировать')}</Text>
+            <Text style={int(600, 15, { color: C.purple, marginTop: 2 })}>{p.email}</Text>
+          </Pressable>
+          {p.phone ? (
+            <Pressable onPress={() => actions.adminCall(p.phone)} onLongPress={() => actions.adminCopy(p.phone)} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border }}>
+              <Text style={int(400, 12, { color: C.muted })}>{tr('Телефон')}</Text>
+              <Text style={int(600, 15, { color: C.purple, marginTop: 2 })}>{p.phone}</Text>
+            </Pressable>
+          ) : null}
+          <View style={{ paddingVertical: 10 }}>
+            <Text style={int(400, 12, { color: C.muted })}>{tr('Регистрация')} · {tr('последний вход')}</Text>
+            <Text style={int(500, 14, { marginTop: 2 })}>{fmtDt(p.created_at)} · {fmtDt(p.last_sign_in_at)}</Text>
+            <Text style={int(400, 12, { color: C.muted, marginTop: 6 })}>{[p.faculty, p.role === 'teacher' ? tr('преподаватель') : null, p.in_group ? tr('в группе') : tr('без группы'), (p.lessons || 0) + ' ' + tr('пар'), p.coins + ' O-COIN', p.push ? tr('пуши включены') : tr('пуши выключены')].filter(Boolean).join(' · ')}</Text>
+          </View>
+        </View>
+      ) : null}
       {total === 0 ? (
         <View style={{ alignItems: 'center', paddingTop: 70 }}>
           <EmptyArt />
@@ -3241,6 +3271,63 @@ export function AdminStudentScreen({ data, topInset, actions }) {
         </View>
       ) : null)}
     </ScrollView>
+  );
+}
+
+const fmtDt = v => v ? new Date(v).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+
+/* ============ Админ: все студенты с почтой ============ */
+export function AdminStudentsScreen({ data, topInset, actions }) {
+  const [q, setQ] = React.useState('');
+  const list = data?.list, sm = data?.summary || {};
+  React.useEffect(() => { const t = setTimeout(() => actions.adminSearchStudents(q), 350); return () => clearTimeout(t); }, [q]);
+  const isNew = v => v && (Date.now() - new Date(v).getTime()) < 7 * 24 * 3600 * 1000;
+  const isActive = v => v && (Date.now() - new Date(v).getTime()) < 24 * 3600 * 1000;
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ paddingTop: topInset + 8, paddingHorizontal: 20 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <IconBtn icon="chevron-left" onPress={() => actions.nav('home')} />
+          <View style={{ flex: 1 }}>
+            <Text style={man(800, 24)}>{tr('Студенты')}</Text>
+            <Text style={int(400, 13, { color: C.muted })}>
+              {sm.students != null ? `${sm.students} ${tr('с почтой')} · ${sm.active_7d ?? 0} ${tr('активны за неделю')} · ${sm.new_7d ?? 0} ${tr('новых')} · ${sm.anonymous ?? 0} ${tr('бросили на почте')}` : tr('Загружаем…')}
+            </Text>
+          </View>
+        </View>
+        <TextInput style={[s.formInput, cardShadow, int(500, 15), { marginTop: 14 }]} placeholder={tr('Поиск: имя, почта, вуз')} placeholderTextColor={C.dot}
+          value={q} onChangeText={setQ} autoCapitalize="none" autoCorrect={false} clearButtonMode="while-editing" />
+      </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {!list ? <Text style={int(400, 14, { color: C.muted, textAlign: 'center', paddingTop: 30 })}>{tr('Загружаем…')}</Text>
+        : !list.length ? <Text style={int(400, 14, { color: C.muted, textAlign: 'center', paddingTop: 30 })}>{tr('Никого не найдено')}</Text>
+        : (
+          <View style={[s.settingsCard, cardShadow]}>
+            {list.map((p, i) => (
+              <Pressable key={p.id} onPress={() => actions.adminOpenStudent(p)} onLongPress={() => actions.adminCopy(p.email)}
+                style={[{ paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }, i < list.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
+                <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: isActive(p.last_sign_in_at) ? hexRgba(C.green, 0.16) : hexRgba(C.purple, 0.12), alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={man(700, 13, { color: isActive(p.last_sign_in_at) ? C.green : C.purple })}>{((p.first_name[0] || '') + (p.last_name[0] || '')).toUpperCase() || '·'}</Text>
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={int(600, 14)} numberOfLines={1}>{(p.first_name + ' ' + p.last_name).trim() || tr('Без имени')}</Text>
+                    {isNew(p.created_at) ? <View style={{ backgroundColor: hexRgba(C.yellow, 0.2), borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 }}><Text style={int(600, 10, { color: C.yellow })}>{tr('новый')}</Text></View> : null}
+                    {p.role === 'teacher' ? <View style={{ backgroundColor: hexRgba(C.teal, 0.18), borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 }}><Text style={int(600, 10, { color: C.teal })}>{tr('преп.')}</Text></View> : null}
+                  </View>
+                  <Text style={int(500, 12.5, { color: C.purple, marginTop: 1 })} numberOfLines={1}>{p.email}</Text>
+                  <Text style={int(400, 12, { color: C.muted, marginTop: 1 })} numberOfLines={1}>{[p.university, p.course ? p.course + ' ' + tr('курс') : null, p.phone].filter(Boolean).join(' · ')}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={int(400, 11, { color: C.muted })}>{fmtDt(p.last_sign_in_at)}</Text>
+                  <Text style={int(400, 11, { color: C.dot, marginTop: 2 })}>{p.lessons} {tr('пар')}</Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 

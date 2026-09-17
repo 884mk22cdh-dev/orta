@@ -21,7 +21,7 @@ import {
   fetchForum, sendForumPost, deleteForumPostServer, renameGroup, setGroupCourse,
   fetchGroupTasks, addGroupTask, deleteGroupTask as deleteGroupTaskServer,
   becomeTeacher, myRole, openAttendSession, markByCode, sessionRoster, mySessions, teacherStats, myStudents, studentCard, gradeStudent, teacherReport, excludeStudent, includeStudent, excludedStudents, deleteGrade, deleteSession, setMark as setMarkServer, giveGrade, myGrades, myTeacherMarks,
-  fetchEvents, addEventServer, deleteEventServer, fetchAppConfig,
+  fetchEvents, addEventServer, deleteEventServer, fetchAppConfig, adminStudents, adminSummary,
   createGroup, joinGroup, myGroup, leaveGroupServer, getGroupSchedule, getPublicProfile, askAI,
   crashList, deleteMyAccount, adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
   coinsState, coinsClaimDaily, coinsClaimTask, coinsClaimReferral, coinsClaimOwnerBonus,
@@ -41,7 +41,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import {
   WelcomeScreen, SetupScreen, HomeScreen, LessonScreen, AfishaScreen, AiScreen,
   NotificationsScreen, ProfileScreen, SettingsScreen, SearchScreen, LoadingScreen, CoinsScreen, PrivacyScreen, IntroSplash,
-  FavoritesScreen, MyPostsScreen, MyNotesScreen, CalendarScreen, TasksScreen, StartScreen, GroupScreen, GroupScanScreen, TeacherScreen, TeacherProfileScreen, TeacherStudentsScreen, TeacherStudentScreen, TeacherReportsScreen, SessionScreen, GradesScreen, AttendanceScreen, PublicProfileScreen, AdminScreen, LoginScreen, AdminStudentScreen, EventScreen, UpdateScreen,
+  FavoritesScreen, MyPostsScreen, MyNotesScreen, CalendarScreen, TasksScreen, StartScreen, GroupScreen, GroupScanScreen, TeacherScreen, TeacherProfileScreen, TeacherStudentsScreen, TeacherStudentScreen, TeacherReportsScreen, SessionScreen, GradesScreen, AttendanceScreen, PublicProfileScreen, AdminScreen, LoginScreen, AdminStudentScreen, EventScreen, UpdateScreen, AdminStudentsScreen,
 } from './src/screens';
 
 const LESSON_TYPES = ['Лекция', 'Практика', 'Лаба', 'Семинар'];
@@ -1200,6 +1200,19 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       const sched = await adminGetSchedule(p.id);
       setRoute({ name: 'adminStudent', data: { profile: p, schedule: sched } });
     },
+    // Полный список студентов с почтой: сервер отдаёт его только админу
+    adminOpenStudents: async () => {
+      setRoute({ name: 'adminStudents', data: { list: null, summary: null } });
+      const [list, summary] = await Promise.all([adminStudents(''), adminSummary()]);
+      setRoute({ name: 'adminStudents', data: { list: list || [], summary } });
+    },
+    adminSearchStudents: async q => {
+      const list = await adminStudents(q);
+      setRoute(r => r.name === 'adminStudents' ? { ...r, data: { ...r.data, list: list || [] } } : r);
+    },
+    adminCopy: async text => { try { await Clipboard.setStringAsync(String(text)); showToast(tr('Скопировано')); } catch (e) {} },
+    adminMail: email => Linking.openURL('mailto:' + email).catch(() => {}),
+    adminCall: phone => Linking.openURL('tel:' + String(phone).replace(/[^+\d]/g, '')).catch(() => {}),
     adminDelete: async id => {
       await adminDeleteEvent(id);
       showToast('Удалено');
@@ -1704,7 +1717,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
     lesson: 'home', calendar: 'home', tasks: 'home', search: 'home', publicProfile: 'home',
     group: 'profile', attendance: 'profile', coins: 'profile', settings: 'profile',
     favorites: 'profile', myposts: 'profile', mynotes: 'profile', admin: 'profile',
-    groupScan: 'group', start: 'home', session: 'teacher', student: 'students', students: 'home', reports: 'home', grades: 'profile', teacher: 'home', privacy: 'settings', event: 'afisha', adminStudent: 'admin',
+    groupScan: 'group', start: 'home', session: 'teacher', student: 'students', students: 'home', reports: 'home', grades: 'profile', teacher: 'home', privacy: 'settings', event: 'afisha', adminStudent: 'adminStudents', adminStudents: 'admin',
   };
   const backTo = BACK_TO[route.name];
   const goBack = () => {
@@ -1773,6 +1786,7 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
     onBack={() => { if (loginSent) { setLoginSent(null); return; } setSetupStep(0); setRoute({ name: 'onboarding' }); }} topInset={top} />;
   else if (route.name === 'admin') screen = <AdminScreen isAdmin={!!state?.isAdmin} deviceId={uidRef.current} data={adminData} crashes={crashes} busy={adminBusy} topInset={top} actions={actions} />;
   else if (route.name === 'adminStudent') screen = <AdminStudentScreen data={route.data} topInset={top} actions={actions} />;
+  else if (route.name === 'adminStudents') screen = <AdminStudentsScreen data={route.data} topInset={top} actions={actions} />;
   else if (route.name === 'event') screen = <EventScreen event={route.data} topInset={top} actions={actions} />;
   else if (route.name === 'notifications') screen = <NotificationsScreen state={state} adminData={adminData} topInset={top} actions={actions} />;
   else if (route.name === 'students') screen = <TeacherStudentsScreen students={state.students || []} excluded={state.excluded || []} topInset={top} actions={actions} />;

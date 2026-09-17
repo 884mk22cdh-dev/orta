@@ -824,3 +824,24 @@ export async function fetchAppConfig() {
     return { minVersion: data.min_version || '', latestVersion: data.latest_version || '', storeUrl: data.store_url || '', message: data.message || '' };
   } catch (e) { return null; }
 }
+
+/* ---------- Админ: все студенты с почтой и активностью (только admin, проверка на сервере) ---------- */
+export async function adminStudents(search = '') {
+  const user = await ensureAuth();
+  if (!user) return null;
+  const { data, error } = await supabase.rpc('admin_students', { search: String(search || ''), lim: 500 });
+  if (error) return null;
+  return (data || []).map(r => ({
+    id: r.id, email: r.email, first_name: r.first_name || '', last_name: r.last_name || '', phone: r.phone || '',
+    university: r.university || '', faculty: r.faculty || '', course: r.course, group_name: r.group_name || '',
+    role: r.role || 'student', created_at: r.created_at, last_sign_in_at: r.last_sign_in_at,
+    lessons: r.lessons || 0, in_group: !!r.in_group, coins: r.coins || 0, streak: r.streak || 0, push: !!r.push,
+  }));
+}
+
+export async function adminSummary() {
+  const user = await ensureAuth();
+  if (!user) return null;
+  const { data, error } = await supabase.rpc('admin_summary');
+  return error ? null : data;
+}
