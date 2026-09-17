@@ -3251,7 +3251,7 @@ export function AdminStudentScreen({ data, topInset, actions }) {
           ) : null}
           <View style={{ paddingVertical: 10 }}>
             <Text style={int(400, 12, { color: C.muted })}>{tr('Регистрация')} · {tr('последний вход')}</Text>
-            <Text style={int(500, 14, { marginTop: 2 })}>{fmtDt(p.created_at)} · {fmtDt(p.last_sign_in_at)}</Text>
+            <Text style={int(500, 14, { marginTop: 2 })}>{fmtDt(p.created_at)} · {fmtDt(p.last_sign_in_at)}{p.seen_at && (Date.now() - new Date(p.seen_at).getTime()) < 120000 ? ' · ' : ''}{p.seen_at && (Date.now() - new Date(p.seen_at).getTime()) < 120000 ? <Text style={{ color: C.green }}>{tr('в сети')}</Text> : null}</Text>
             <Text style={int(400, 12, { color: C.muted, marginTop: 6 })}>{[p.faculty, p.role === 'teacher' ? tr('преподаватель') : null, p.in_group ? tr('в группе') : tr('без группы'), (p.lessons || 0) + ' ' + tr('пар'), p.coins + ' O-COIN', p.push ? tr('пуши включены') : tr('пуши выключены')].filter(Boolean).join(' · ')}</Text>
           </View>
         </View>
@@ -3281,8 +3281,21 @@ export function AdminStudentsScreen({ data, topInset, actions }) {
   const [q, setQ] = React.useState('');
   const list = data?.list, sm = data?.summary || {};
   React.useEffect(() => { const t = setTimeout(() => actions.adminSearchStudents(q), 350); return () => clearTimeout(t); }, [q]);
+  const [course, setCourse] = React.useState(0);   // 0 = все курсы
   const isNew = v => v && (Date.now() - new Date(v).getTime()) < 7 * 24 * 3600 * 1000;
-  const isActive = v => v && (Date.now() - new Date(v).getTime()) < 24 * 3600 * 1000;
+  const isOnline = v => v && (Date.now() - new Date(v).getTime()) < 2 * 60 * 1000;
+  const ago = v => {
+    if (!v) return tr('не заходил(а)');
+    const m = Math.floor((Date.now() - new Date(v).getTime()) / 60000);
+    if (m < 2) return tr('в сети');
+    if (m < 60) return m + ' ' + tr('мин назад');
+    const h = Math.floor(m / 60); if (h < 24) return h + ' ' + tr('ч назад');
+    const d = Math.floor(h / 24); return d + ' ' + tr('дн назад');
+  };
+  const courses = [1, 2, 3, 4, 5];
+  const byCourse = c => (list || []).filter(p => c === 0 ? true : (c === 5 ? (p.course || 0) >= 5 || !p.course : p.course === c));
+  const shown = byCourse(course).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const onlineCount = (list || []).filter(p => isOnline(p.seen_at)).length;
   return (
     <View style={{ flex: 1 }}>
       <View style={{ paddingTop: topInset + 8, paddingHorizontal: 20 }}>
@@ -3291,23 +3304,37 @@ export function AdminStudentsScreen({ data, topInset, actions }) {
           <View style={{ flex: 1 }}>
             <Text style={man(800, 24)}>{tr('Студенты')}</Text>
             <Text style={int(400, 13, { color: C.muted })}>
-              {sm.students != null ? `${sm.students} ${tr('с почтой')} · ${sm.active_7d ?? 0} ${tr('активны за неделю')} · ${sm.new_7d ?? 0} ${tr('новых')} · ${sm.anonymous ?? 0} ${tr('бросили на почте')}` : tr('Загружаем…')}
+              {sm.students != null ? `${sm.students} ${tr('с почтой')} · ${onlineCount} ${tr('в сети')} · ${sm.active_7d ?? 0} ${tr('активны за неделю')} · ${sm.new_7d ?? 0} ${tr('новых')}` : tr('Загружаем…')}
             </Text>
           </View>
         </View>
         <TextInput style={[s.formInput, cardShadow, int(500, 15), { marginTop: 14 }]} placeholder={tr('Поиск: имя, почта, вуз')} placeholderTextColor={C.dot}
           value={q} onChangeText={setQ} autoCapitalize="none" autoCorrect={false} clearButtonMode="while-editing" />
+        {/* Курсы: первокурсники отдельно, второкурсники отдельно */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }} contentContainerStyle={{ gap: 8 }}>
+          {[0, ...courses].map(c => {
+            const n = byCourse(c).length, on = c === course;
+            return (
+              <Pressable key={c} onPress={() => setCourse(c)} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: on ? C.purple : C.card }}>
+                <Text style={int(600, 13, { color: on ? '#fff' : C.text })}>{c === 0 ? tr('Все') : c === 5 ? '5+ / —' : c + ' ' + tr('курс')} · {n}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {!list ? <Text style={int(400, 14, { color: C.muted, textAlign: 'center', paddingTop: 30 })}>{tr('Загружаем…')}</Text>
-        : !list.length ? <Text style={int(400, 14, { color: C.muted, textAlign: 'center', paddingTop: 30 })}>{tr('Никого не найдено')}</Text>
+        : !shown.length ? <Text style={int(400, 14, { color: C.muted, textAlign: 'center', paddingTop: 30 })}>{tr('Никого не найдено')}</Text>
         : (
           <View style={[s.settingsCard, cardShadow]}>
-            {list.map((p, i) => (
+            {shown.map((p, i) => (
               <Pressable key={p.id} onPress={() => actions.adminOpenStudent(p)} onLongPress={() => actions.adminCopy(p.email)}
-                style={[{ paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }, i < list.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
-                <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: isActive(p.last_sign_in_at) ? hexRgba(C.green, 0.16) : hexRgba(C.purple, 0.12), alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={man(700, 13, { color: isActive(p.last_sign_in_at) ? C.green : C.purple })}>{((p.first_name[0] || '') + (p.last_name[0] || '')).toUpperCase() || '·'}</Text>
+                style={[{ paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }, i < shown.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
+                <View>
+                  <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: isOnline(p.seen_at) ? hexRgba(C.green, 0.16) : hexRgba(C.purple, 0.12), alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={man(700, 13, { color: isOnline(p.seen_at) ? C.green : C.purple })}>{((p.first_name[0] || '') + (p.last_name[0] || '')).toUpperCase() || '·'}</Text>
+                  </View>
+                  {isOnline(p.seen_at) ? <View style={{ position: 'absolute', right: -2, bottom: -2, width: 12, height: 12, borderRadius: 6, backgroundColor: C.green, borderWidth: 2, borderColor: C.card }} /> : null}
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -3319,8 +3346,8 @@ export function AdminStudentsScreen({ data, topInset, actions }) {
                   <Text style={int(400, 12, { color: C.muted, marginTop: 1 })} numberOfLines={1}>{[p.university, p.course ? p.course + ' ' + tr('курс') : null, p.phone].filter(Boolean).join(' · ')}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={int(400, 11, { color: C.muted })}>{fmtDt(p.last_sign_in_at)}</Text>
-                  <Text style={int(400, 11, { color: C.dot, marginTop: 2 })}>{p.lessons} {tr('пар')}</Text>
+                  <Text style={int(600, 11, { color: isOnline(p.seen_at) ? C.green : C.muted })}>{ago(p.seen_at || p.last_sign_in_at)}</Text>
+                  <Text style={int(400, 11, { color: C.dot, marginTop: 2 })}>{tr('рег.')} {fmtDt(p.created_at)}</Text>
                 </View>
               </Pressable>
             ))}

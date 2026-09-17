@@ -834,7 +834,7 @@ export async function adminStudents(search = '') {
   return (data || []).map(r => ({
     id: r.id, email: r.email, first_name: r.first_name || '', last_name: r.last_name || '', phone: r.phone || '',
     university: r.university || '', faculty: r.faculty || '', course: r.course, group_name: r.group_name || '',
-    role: r.role || 'student', created_at: r.created_at, last_sign_in_at: r.last_sign_in_at,
+    role: r.role || 'student', created_at: r.created_at, last_sign_in_at: r.last_sign_in_at, seen_at: r.seen_at, app_version: r.app_version || '',
     lessons: r.lessons || 0, in_group: !!r.in_group, coins: r.coins || 0, streak: r.streak || 0, push: !!r.push,
   }));
 }
@@ -844,4 +844,13 @@ export async function adminSummary() {
   if (!user) return null;
   const { data, error } = await supabase.rpc('admin_summary');
   return error ? null : data;
+}
+
+/* Присутствие: раз в минуту, пока приложение открыто. Админ видит «в сети». */
+export async function touchPresence(version) {
+  try {
+    const user = await ensureAuth();
+    if (!user || user.is_anonymous) return;
+    await supabase.rpc('touch_presence', { app_version: String(version || '') });
+  } catch (e) {}
 }

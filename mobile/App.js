@@ -21,7 +21,7 @@ import {
   fetchForum, sendForumPost, deleteForumPostServer, renameGroup, setGroupCourse,
   fetchGroupTasks, addGroupTask, deleteGroupTask as deleteGroupTaskServer,
   becomeTeacher, myRole, openAttendSession, markByCode, sessionRoster, mySessions, teacherStats, myStudents, studentCard, gradeStudent, teacherReport, excludeStudent, includeStudent, excludedStudents, deleteGrade, deleteSession, setMark as setMarkServer, giveGrade, myGrades, myTeacherMarks,
-  fetchEvents, addEventServer, deleteEventServer, fetchAppConfig, adminStudents, adminSummary,
+  fetchEvents, addEventServer, deleteEventServer, fetchAppConfig, adminStudents, adminSummary, touchPresence,
   createGroup, joinGroup, myGroup, leaveGroupServer, getGroupSchedule, getPublicProfile, askAI,
   crashList, deleteMyAccount, adminCheck, adminLoad, adminPublishEvent, adminDeleteEvent, adminGetSchedule,
   coinsState, coinsClaimDaily, coinsClaimTask, coinsClaimReferral, coinsClaimOwnerBonus,
@@ -393,6 +393,17 @@ function Root() {
     });
     return () => sub.remove();
   }, [checkAppVersion]);
+
+  // Присутствие: отметка «я в приложении» сразу и раз в минуту, пока экран активен
+  useEffect(() => {
+    if (!state?.onboarded || !BACKEND_ENABLED) return;
+    const ver = Constants.expoConfig?.version || '';
+    const ping = () => { if (AppState.currentState === 'active') touchPresence(ver); };
+    ping();
+    const timer = setInterval(ping, 60 * 1000);
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') ping(); });
+    return () => { clearInterval(timer); sub.remove(); };
+  }, [state?.onboarded]);
 
   // Напоминания о парах: пересобираем при смене расписания, интервала или опроса о посещаемости.
   // Разрешение на уведомления просим ТОЛЬКО после регистрации — на экране приветствия
