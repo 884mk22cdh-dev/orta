@@ -3316,7 +3316,7 @@ export function AdminStudentsScreen({ data, topInset, actions }) {
             const n = byCourse(c).length, on = c === course;
             return (
               <Pressable key={c} onPress={() => setCourse(c)} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: on ? C.purple : C.card }}>
-                <Text style={int(600, 13, { color: on ? '#fff' : C.text })}>{c === 0 ? tr('Все') : c === 5 ? '5+ / —' : c + ' ' + tr('курс')} · {n}</Text>
+                <Text style={int(600, 13, { color: on ? '#fff' : C.ink })}>{c === 0 ? tr('Все') : c === 5 ? '5+ / —' : c + ' ' + tr('курс')} · {n}</Text>
               </Pressable>
             );
           })}
