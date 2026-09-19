@@ -502,8 +502,18 @@ function retryAfterSec(msg) {
  */
 export async function attachEmail(email) {
   if (!BACKEND_ENABLED) return { error: 'Нет соединения с сервером' };
-  const user = await ensureAuth();
+  let user = await ensureAuth();
   if (!user) return { error: 'Нет соединения с сервером' };
+  // Привязывать почту можно только к анонимному аккаунту. Если в сессии уже
+  // полноценный аккаунт с другой почтой, а человек регистрируется заново —
+  // это новый человек (или тот же с другого адреса), а не смена почты у старого.
+  // Иначе чужая почта перепишет чужой аккаунт вместе с правами.
+  if (!user.is_anonymous && user.email && user.email.toLowerCase() !== String(email).toLowerCase()) {
+    await supabase.auth.signOut().catch(() => {});
+    const { data, error: e0 } = await supabase.auth.signInAnonymously();
+    if (e0 || !data?.user) return { error: 'Нет соединения с сервером' };
+    user = data.user;
+  }
   let { error } = await supabase.auth.updateUser({ email });
   // Аккаунт за токеном мог исчезнуть — берём новый и повторяем
   if (error && await resetDeadSession(error.message)) {
