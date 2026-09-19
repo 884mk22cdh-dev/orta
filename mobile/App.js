@@ -286,8 +286,11 @@ function Root() {
         const tok = await registerPushToken(pid);
         if (tok) savePushToken(tok);
       } catch (e) {}
+      // Права админа перепроверяем каждый запуск в обе стороны: если сессия
+      // на телефоне сменилась на анонимную, старое «я админ» должно сброситься,
+      // иначе админка показывается, а сервер отказывает.
       const isAdm = await adminCheck();
-      if (isAdm && !stateRef.current?.isAdmin) patch({ isAdmin: true });
+      if (!!isAdm !== !!stateRef.current?.isAdmin) patch({ isAdmin: !!isAdm });
       if (isAdm) {
         const d = await adminLoad();
         if (d) setAdminData(d);
@@ -1188,6 +1191,13 @@ insert into public.admins (user_id) values ('${uid}') on conflict do nothing;`;
       for (const uri of (ev.photos || [])) {
         const r = await uploadEventPhoto(uri);
         if (r && r.url) urls.push(r.url); else lastErr = (r && r.error) || 'неизвестно';
+      }
+      // Фото не загрузились — не публикуем событие без них и говорим почему.
+      // Чаще всего это значит, что сессия не админская: нужно перезайти.
+      if (lastErr) {
+        setAdminBusy(false);
+        showToast(tr('Фото не загрузились') + ': ' + lastErr + '. ' + tr('Выйдите и войдите заново как админ'));
+        return false;
       }
 
       const res = await adminPublishEvent({ ...ev, photos: urls });
